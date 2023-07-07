@@ -71,7 +71,6 @@ declare module '$env/static/private' {
 	export const npm_config_msvs_version: string;
 	export const npm_config_node_gyp: string;
 	export const npm_config_noproxy: string;
-	export const npm_config_open: string;
 	export const npm_config_prefix: string;
 	export const npm_config_python: string;
 	export const npm_config_resolution_mode: string;
@@ -105,7 +104,6 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PYTHON_HOME: string;
-	export const SESSIONNAME: string;
 	export const SystemDrive: string;
 	export const SystemRoot: string;
 	export const TEMP: string;
@@ -200,7 +198,6 @@ declare module '$env/dynamic/private' {
 		npm_config_msvs_version: string;
 		npm_config_node_gyp: string;
 		npm_config_noproxy: string;
-		npm_config_open: string;
 		npm_config_prefix: string;
 		npm_config_python: string;
 		npm_config_resolution_mode: string;
@@ -234,7 +231,6 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PYTHON_HOME: string;
-		SESSIONNAME: string;
 		SystemDrive: string;
 		SystemRoot: string;
 		TEMP: string;
