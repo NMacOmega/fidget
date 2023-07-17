@@ -1,25 +1,16 @@
 <script>
-	import { metalnessStore, selectedUUIDStore } from '$lib/stores';
-
+	import { metalness } from '$lib/stores';
 	export let max = 1;
 	export let min = 0;
 	export let step = 0.01;
 
-	let metalness = 0,
+	let value = $metalness,
 		element;
 
 	//CSS Variables
 	let left, color, borderShape, markerShape, markerColor, markerBorder, hslBackground;
 
-	const setValuesOnMaterialChange = (UUID_trigger) => {
-		metalness = $metalnessStore;
-		updateMarker($metalnessStore);
-	};
-	const updateMetalness = (metalness) => {
-		metalnessStore.setMaterial(metalness);
-	};
-
-	const updateMarker = (metalness) => {
+	const generateStyle = (metalness) => {
 		const leftPercent = metalness * 100 || 0;
 		left = `${leftPercent}%`;
 
@@ -58,10 +49,8 @@
 		hsl(1, 1%, 90%) 100%,  
 		hsl(1, 1%, 90%) 100%)`;
 	};
-
-	$: setValuesOnMaterialChange($selectedUUIDStore);
-	$: updateMetalness(metalness);
-	$: updateMarker(metalness);
+	$: generateStyle($metalness);
+	$: $metalness = value;
 </script>
 
 <div
@@ -84,7 +73,7 @@
 		{max}
 		{step}
 		aria-label="metalic slider"
-		bind:value={metalness}
+		bind:value
 		bind:this={element}
 	/>
 	<div id="metalnessMarker" class="metalnessMarker" />

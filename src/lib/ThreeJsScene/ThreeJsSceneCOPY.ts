@@ -2,15 +2,20 @@
 import {get} from 'svelte/store';
 import { getPickPosition, pickObjectFromPosition } from "$lib/ThreeJsScene/ThreeJsPicker";
 import {handleRotation}  from "$lib/ThreeJsScene/ThreeJsRotate";
-import { selectedUUID, 
+import { selectedUUIDStore, 
   orbitStore, 
-  selectedObject, 
+  selectedObjectStore, 
   isMouseDownStore, 
   pickPositionStore, 
   sceneStore, 
-  sceneObjects, 
+  sceneObjectsStore, 
+  animationsStore, 
   currentFidgetNameStore,
-  sceneInteractionsStore} from "$lib/stores";
+  activeMaterialStore,
+  sceneInteractionsStore,
+  zoomEnabledStore,
+  hsl
+} from "$lib/stores";
 
 
 export const onMouseUp = () => {
@@ -23,7 +28,7 @@ export const onMouseUp = () => {
 export const onMouseDown = (event) => {
   // if (displayingHelp) setHelpScreen(false);
   // checkColorPickerLock(event);
-  const currentUUID = get(selectedUUID);
+  const currentUUID = get(selectedUUIDStore);
     
     const newPickPosition = getPickPosition(event);
     pickPositionStore.set(newPickPosition);
@@ -32,7 +37,7 @@ export const onMouseDown = (event) => {
     if(!pickedUUID) return;
     
     if (pickedUUID !== currentUUID) {
-      selectedUUID.set(pickedUUID);
+      selectedUUIDStore.set(pickedUUID);
 
       const sceneInteractionsList = Object.keys(get(sceneInteractionsStore));
       const orbit = get(orbitStore);
@@ -52,9 +57,9 @@ export const onMouseDown = (event) => {
 export const onMouseDrag = (event) => {
   const isMouseDown = get(isMouseDownStore);
   if(!isMouseDown) return;
-  const currentSelectedObject = get(selectedObject);
-  if(currentSelectedObject?.userData?.limit?.rotation)
-    handleRotation(event, currentSelectedObject);
+  const selectedObject = get(selectedObjectStore);
+  if(selectedObject?.userData?.limit?.rotation)
+    handleRotation(event, selectedObject);
 }
 
 
@@ -69,10 +74,10 @@ export const highlightFidget = (focusPoint: string) => {
     return;
   } 
 
-  const objects = get(sceneObjects);
+  const sceneObjects = get(sceneObjectsStore);
   let fidgetName = ''; 
   
-  Object.entries(objects).forEach(([_, obj]) => {
+  Object.entries(sceneObjects).forEach(([_, obj]) => {
       const tag = obj.userData.focus || undefined;
       const fidgetGroup = obj.userData.group || undefined;
       

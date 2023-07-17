@@ -1,6 +1,5 @@
 <script>
-	export let color, saturation, value;
-
+	import { hsv, hex } from '$lib/stores';
 	let element,
 		isMouseCaptured = false;
 
@@ -12,9 +11,9 @@
 		top = 100 - value;
 		left = saturation;
 	};
-	const updateMarkerColor = (color) => {
-		markerColor = color.hex;
-		flatMarkerColor = `hsl(${color?.hsl?.h || '0'}, 100%, 50%)`;
+	const updateMarkerColor = ($hex, $hsv) => {
+		markerColor = $hex;
+		flatMarkerColor = `hsl(${$hsv.h || '0'}, 100%, 50%)`;
 	};
 
 	const clampDifference = (a, b, max, min) => {
@@ -32,14 +31,15 @@
 		const v = (y / h) * 100;
 		left = clampDifference(s, l, margin.max, margin.min);
 		top = clampDifference(v, t, margin.max, margin.min);
-		saturation = clampDifference(s, l, 100, 0);
-		value = 100 - clampDifference(v, t, 100, 0);
+		const saturation = clampDifference(s, l, 100, 0);
+		const value = 100 - clampDifference(v, t, 100, 0);
+		$hsv = { ...$hsv, s: saturation, v: value };
 	};
 
 	window.addEventListener('mousemove', onMouseMove);
 	window.addEventListener('mouseup', () => (isMouseCaptured = false));
 
-	$: updateMarkerColor(color);
+	$: updateMarkerColor($hex, $hsv);
 	$: leftPercent = `${left}%`;
 	$: topPercent = `${top}%`;
 </script>

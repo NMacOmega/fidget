@@ -1,124 +1,105 @@
 import { writable, derived, get } from "svelte/store";
-import { createColorStore } from "./colorStore";
 import { readableWithInit } from "./customStores";
+import { colorStore } from "./colorStore";
 
-export const selectedUUIDStore = writable('');
-export const sceneObjectsStore = readableWithInit({});
+export const selectedUUID = writable('');
+export const sceneObjects = readableWithInit({});
 
-export const selectedObjectStore = derived(
-    selectedUUIDStore, ($newUUID)=> get(sceneObjectsStore)[$newUUID]
-    );
-
-
-
-  
-
-  
-  
-  export const colorStore = function(){
-    const {subscribe, set:setVal, parseColor} = createColorStore('#ffffff');
-    
-    const set = (val)=> {
-    const color = parseColor(val);
-    if(!(color?.hex)) return;
-    setVal({...color});
-    }
-    const setMaterial = (val) => {
-      const color = parseColor(val);
-      if(!(color?.hex)) return;
-      const activeMaterial = get(activeMaterialStore);
-      if(activeMaterial === undefined) return;
-      activeMaterial.color.set(color.hex);
-      setVal({...color});
-    }
-    return { subscribe, set, setMaterial};
-  }();
+export const selectedObject = derived(
+    selectedUUID, ($newUUID)=> get(sceneObjects)[$newUUID]
+    ); 
 
 
-  
-  
-  export const opacityStore = function(){
-    const {subscribe, set} = writable(1);
-    const setMaterial = (val) => {
-      if(!val) return;
-      if(val > 1) val /=100;
-      if(val > 1) val = 1;
-      if(val < 0) val = 0;
-      const activeMaterial = get(activeMaterialStore);
-      if(activeMaterial === undefined) return;
-      activeMaterial.opacity = val;
-      set(val);
-    }
-    return {subscribe, set, setMaterial};
-  }();
-  
-  export const metalnessStore = function(){
-    const {subscribe, set} = writable(1);
-    const setMaterial = (val) => {
-      if(!val) return;
-      if(val > 1) val /=100;
-      if(val > 1) val = 1;
-      if(val < 0) val = 0;
-      const activeMaterial = get(activeMaterialStore);
-      if(activeMaterial === undefined) return;
-      activeMaterial.metalness = val;
-      set(val);
-    }
-    return {subscribe, set, setMaterial};
-  }();
-  
-  export const roughnessStore = function(){
-    const {subscribe, set} = writable(1);
-    const setMaterial = (val) => {
-      if(!val) return;
-      if(val > 1) val /=100;
-      if(val > 1) val = 1;
-      if(val < 0) val = 0;
-      const activeMaterial = get(activeMaterialStore);
-      if(activeMaterial === undefined) return;
-      activeMaterial.roughness = val;
-      set(val);
-    }
-    return {subscribe, set, setMaterial};
-  }();
+export const activeMaterial = function(){
+    const {subscribe} = derived( selectedUUID, ($UUID)=> updateMaterialFromUUID($UUID));
 
-
-  export const activeMaterialStore = function(){
-
-    const setColor = (hex)=>{
-      if(!hex) return;
-      objects[$newUUID].material.color.set(hex);
-    };
-    const setOpacity = (val)=>{
-      if(!(typeof val === 'number')) return
-      objects[$newUUID].material.opacity = val;
-    };
-    const setMetalness = (val)=>{
-      if(!(typeof val === 'number')) return
-      objects[$newUUID].material.metalness = val;
-    }
-    const setRoughness = (val)=>{
-      if(!(typeof val === 'number')) return
-      objects[$newUUID].material.roughness = val;
-    }
-
-    const getActiveMaterial = ($newUUID)=>{
-        const oldValue = get(activeMaterialStore);
-        const objects = get(sceneObjectsStore);
+    function updateMaterialFromUUID($newUUID){
+        const oldValue = get(activeMaterial);
+        const objects = get(sceneObjects);
         if($newUUID.length < 0 
-          || !objects[$newUUID] 
-          || !(objects[$newUUID].material)) 
-          return oldValue;
+            || !objects[$newUUID] 
+            || !(objects[$newUUID].material)) 
+            return oldValue;
         objects[$newUUID].material.transparent = true;
-        const {metalness, roughness, opacity, color} = objects[$newUUID].material;
-        const hexColor = '#'+color.getHexString();
-        metalnessStore.set(metalness);
-        roughnessStore.set(roughness);
-        opacityStore.set(opacity);
-        colorStore.set(hexColor);
+        const {metalness:m, roughness:r, opacity:o, color:c} = objects[$newUUID].material;
+        colorStore.setDirectFromHexValue('#'+c.getHexString());
+        metalness.setDirect(m);
+        opacity.setDirect(o);
+        roughness.setDirect(r);
         return objects[$newUUID].material;
     }
 
-    const {subscribe} = derived( selectedUUIDStore, ($newUUID)=> getActiveMaterial($newUUID))
-    return {subscribe, setColor, setMetalness, setOpacity, setRoughness};
-  }();
+    function setMetalness (v, callback) {
+        const material = get(activeMaterial);
+        if(!material) return;
+        material.metalness = v;
+        return callback(v);
+    }
+
+    function setRoughness (v, callback) {
+        const material = get(activeMaterial);
+        if(!material) return;
+        material.roughness = v;
+        return callback(v);
+    }
+
+    function setOpacity (v, callback) {
+        const material = get(activeMaterial);
+        if(!material) return;
+        material.opacity = v;
+        return callback(v);
+    }
+
+    function setColorFromHex (hex, callback) {
+        const material = get(activeMaterial);
+        if(!material) return;
+        material.color.setHex(hex);
+        return callback(hex);
+    }
+
+    function setColorFromHSL (h=1, s=1, l=1, callback) {
+        const material = get(activeMaterial);
+        if(!material) return;
+        material.color.setHSL(h/360, s/100, l/100); //ThreeJS requres values between 1 and 0
+        return callback({h,s,l});
+    }
+    return {subscribe, setMetalness, setRoughness, setOpacity, setColorFromHex, setColorFromHSL};
+}();
+
+//Material Properties
+
+export const opacity = function(){
+    const {subscribe, set:setDirect} = writable(1);
+    const set = (v)=> activeMaterial.setOpacity(v, setDirect);
+    return {subscribe, set, setDirect};
+}();
+
+export const metalness = function(){
+    const {subscribe, set:setDirect} = writable(1);
+    const set = (v)=> activeMaterial.setMetalness(v, setDirect);
+    return {subscribe, set, setDirect};
+}();
+
+export const roughness = function(){
+    const {subscribe, set:setDirect} = writable(1);
+    const set = (v)=> activeMaterial.setRoughness(v, setDirect);
+    return {subscribe, set, setDirect};
+}();
+
+export const glossiness = function(){
+    const {subscribe} = derived(roughness, ($r)=>1-$r);
+    const set = (v)=>{
+        const newRoughness = 1 - v;
+        roughness.set(newRoughness);
+    }
+    return {subscribe, set};
+}();
+
+
+
+
+
+//Supporting Functions
+  
+
+  

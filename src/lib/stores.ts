@@ -1,7 +1,8 @@
 import { derived, readable, readonly, writable } from "svelte/store";
 import { readableWithInit, traversableNumber } from "./customStores";
 import * as cameraStores from './cameraStores';
-import * as materialStores from './materialStores'
+import * as materialStores from './materialStores';
+import * as colorStores from './colorStore';
 import {get} from 'svelte/store';
 
 interface PickPosition {
@@ -9,8 +10,17 @@ interface PickPosition {
     y: number
   }
 
-export const {cameraPositionsStore, cameraReferencesStore, cameraStore, currentCameraIndexStore, focalPositionsStore, orbitStore, zoomEnabledStore, zoomStore} = cameraStores;
-export const {selectedUUIDStore, selectedObjectStore, sceneObjectsStore,activeMaterialStore, colorStore, metalnessStore, opacityStore, roughnessStore} = materialStores;
+export const {cameraPositionsStore, cameraReferencesStore, cameraStore, currentCameraIndexStore, 
+  focalPositionsStore, orbitStore, zoomEnabledStore, zoomStore
+} = cameraStores;
+
+
+export const {selectedUUID, sceneObjects, selectedObject, activeMaterial, 
+  opacity, roughness, glossiness, metalness
+} = materialStores;
+
+export const {hsl, hsv, hex, rgb
+} = colorStores;
 
 export const isMouseDownStore = writable(false);
 export const currentFidgetNameStore = writable(''); 
@@ -18,7 +28,6 @@ export const pickPositionStore = writable({});
 export const currentColorDragCoordinates = writable();
 //Maybe mark the location and do a derived
 //Marker shoudl also follow what text input says
-
 
 export const canvasStore = writable();
 export const sceneStore = readableWithInit({});

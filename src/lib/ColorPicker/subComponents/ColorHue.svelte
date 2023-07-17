@@ -1,16 +1,29 @@
 <script>
-	export let value = 0,
-		color,
-		min = 0,
-		max = 360;
-	let left, style, flatColor;
+	import { hsv } from '$lib/stores';
 
-	$: flatColor = `hsl(${color?.hsl?.h || '0'}, 100%, 50%)`;
-	$: left = (value / max) * 100;
-	$: style = `--left: ${left}%; --color:${flatColor};`;
+	export let min = 0.0,
+		max = 360,
+		step = 0.001;
+
+	//CSS variables
+	let value = $hsv.h,
+		left,
+		flatColor;
+
+	const generateStyle = (hsv) => {
+		left = `${(hsv.h / max) * 100}%`;
+		flatColor = `hsl(${hsv.h}, 100%, 50%)`;
+	};
+
+	const updateValue = (newHue) => {
+		$hsv = { ...$hsv, h: newHue };
+		generateStyle($hsv);
+	};
+	$: generateStyle($hsv);
+	$: updateValue(value);
 </script>
 
-<div class="colorHue" {style}>
+<div class="colorHue" style:--left={left} style:--color={flatColor}>
 	<input
 		id="colorHueSlider"
 		name="colorHueSlider"
@@ -18,7 +31,7 @@
 		type="range"
 		{min}
 		{max}
-		step="1"
+		{step}
 		aria-label="Hue slider"
 		bind:value
 	/>

@@ -1,11 +1,11 @@
 <script>
-	import { roughnessStore, colorStore, selectedUUIDStore } from '$lib/stores';
+	import { glossiness, hsl } from '$lib/stores';
 
 	export let max = 1,
 		min = 0,
 		step = 0.01;
 
-	let glossiness = 0;
+	let value = $glossiness;
 
 	//CSS Variablss
 	let left,
@@ -13,35 +13,24 @@
 		color,
 		hslBackground;
 
-	const setValuesOnMaterialChange = (UUID_trigger) => {
-		glossiness = 1 - $roughnessStore;
-	};
-	const updateRoughness = (e) => {
-		const val = e?.target?.value;
-		glossiness = val;
-		let roughness = 1 - glossiness;
-		if (roughness <= 0) roughness = 0.0001;
-		roughnessStore.setMaterial(roughness);
-	};
-	const updateMarkerPosition = (leftPercent = 0) => {
+	const generateStyle = (glossiness, hsl) => {
+		const hue = hsl.h;
+		const leftPercent = glossiness * 100;
 		const minDisplay = 20;
 		const heightPercent = leftPercent < minDisplay ? minDisplay : leftPercent;
 		left = `${leftPercent}%`;
 		height = `${heightPercent}%`;
-	};
 
-	const updateMarkerColor = (hue = 0, stop = 0) => {
 		color = `hsl(${hue}, 100%, 60%)`;
 		hslBackground = `linear-gradient(90deg, 
 		hsl(${hue}, 1%, 90%) 0%,  
-		hsl(${hue}, 40%, 50%) ${stop}%,  
+		hsl(${hue}, 40%, 50%) ${leftPercent}%,  
 		hsl(${hue}, 100%, 50%) 100%,  
 		hsl(${hue}, 100%, 50%) 100%)`;
 	};
 
-	$: setValuesOnMaterialChange($selectedUUIDStore);
-	$: updateMarkerPosition(glossiness * 100);
-	$: updateMarkerColor($colorStore?.hsl?.h, glossiness * 100);
+	$: generateStyle($glossiness, $hsl);
+	$: $glossiness = value <= 0 ? 0.0001 : value;
 </script>
 
 <div
@@ -61,8 +50,7 @@
 		{max}
 		{step}
 		aria-label="roughness slider"
-		bind:value={glossiness}
-		on:input={(e) => updateRoughness(e)}
+		bind:value
 	/>
 	<div id="roughnessMarker" class="roughnessMarker" />
 </div>

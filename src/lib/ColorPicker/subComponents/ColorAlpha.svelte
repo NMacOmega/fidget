@@ -1,22 +1,24 @@
 <script>
-	export let value = 0,
-		color,
-		min = 0.0,
+	import { hsl, hex, opacity } from '$lib/stores';
+
+	export let min = 0.0,
 		max = 1.0,
 		step = 0.0001;
-	let left, baseColor, opacityColor;
-	//Maybe on lighter hues change the border to black?
+	let value = $opacity,
+		left,
+		baseColor,
+		opacityColor;
 
-	const generateStyle = (color, opacity) => {
-		let { h = 0, s = 0, l = 0 } = color.hsl;
-		let hex = color.hex || '#ffffff';
-		let alpha = opacity || 1;
-
+	// //Maybe on lighter hues change the border to black?
+	const generateStyle = (hsl, hex, opacity) => {
+		let { h = 0, s = 0, l = 0 } = hsl;
+		opacityColor = `hsla(${h}, ${s}%, ${l}%, ${opacity})`;
 		left = `${(opacity / max) * 100}%`;
 		baseColor = hex;
-		opacityColor = `hsla(${h}, ${s}%, ${l}%, ${alpha})`;
 	};
-	$: generateStyle(color, value);
+
+	$: generateStyle($hsl, $hex, $opacity);
+	$: $opacity = value;
 </script>
 
 <div

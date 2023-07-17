@@ -1,13 +1,7 @@
 <script>
+	//https://github.com/NMacOmega/fidget/actions/runs/5482528004/jobs/9987948534
+	import { selectedUUID, hsl, metalness, opacity, glossiness } from '$lib/stores';
 	import Icon from '$lib/Icon/Icon.svelte';
-	import MetalnessSlider from '$lib/MetalnessSlider/MetalnessSlider.svelte';
-	import {
-		colorStore as color,
-		metalnessStore as metalness,
-		opacityStore as opacity,
-		roughnessStore as roughness,
-		selectedUUIDStore
-	} from '$lib/stores';
 	export let isOpen = false;
 
 	let icon, activeClass;
@@ -33,8 +27,8 @@
 		}, 200);
 	};
 
-	const generateStyle = (color, metalness, opacity, roughness) => {
-		const { h = 0, s = 0, l = 0 } = color?.hsl;
+	const generateStyle = (hsl, metalness, opacity, glossiness) => {
+		const { h, s, l } = hsl;
 		const dullS = s / 2,
 			dullL = l / 2;
 		materialColor = `hsl(${h}deg ${s}% ${l}%)`;
@@ -44,10 +38,8 @@
 		glossyColor = `hsl(${h}deg 100% 70%)`;
 		glossyBackgroundColor = `hsl(${h}deg 100% 10%)`;
 
-		const glossiness = (1 - roughness || 0) * 100;
-		const glossyPercent = 100 - glossiness;
+		const glossyPercent = 100 - glossiness * 100;
 		let metalPercent = 100 - metalness * 100;
-		console.log(metalPercent);
 		if (metalPercent > 97) metalPercent = 100;
 		let alphaPercent = (1 - opacity) * 100;
 		if (alphaPercent > 90) alphaPercent = 90;
@@ -63,8 +55,8 @@
 		isOpen = !isOpen;
 	};
 
-	$: toggleTransition($selectedUUIDStore);
-	$: generateStyle($color, $metalness, $opacity, $roughness);
+	$: toggleTransition($selectedUUID);
+	$: generateStyle($hsl, $metalness, $opacity, $glossiness);
 	$: icon = isOpen ? 'close' : 'play';
 	$: activeClass = isOpen ? 'active' : '';
 </script>

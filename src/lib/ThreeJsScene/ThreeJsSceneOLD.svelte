@@ -15,10 +15,9 @@
 		animationsStore,
 		cameraPositionsStore,
 		focalPositionsStore,
-		sceneObjects,
+		sceneObjectsStore,
 		sceneInteractionsStore,
-		zoomStore,
-		activeMaterial
+		zoomStore
 	} from '$lib/stores';
 
 	import { highlightFidget, onMouseDown, onMouseUp, onMouseDrag } from './ThreeJsScene';
@@ -32,7 +31,6 @@
 
 	let threeCanvas: HTMLCanvasElement;
 	let onWindowResize = () => {};
-	let hiddenMaterialReference = '';
 
 	if (browser) {
 		let camera: THREE.PerspectiveCamera;
@@ -114,8 +112,7 @@
 				objects[obj.uuid] = obj;
 			});
 
-			// sceneObjectsStore.init(objects);
-			sceneObjects.init(objects);
+			sceneObjectsStore.init(objects);
 			cameraPositionsStore.init(cameraPositions);
 			focalPositionsStore.init(focalPositions);
 			animationsStore.init(animationsMap);
@@ -159,13 +156,6 @@
 			animate();
 		});
 	}
-
-	function updateFromMaterial($material) {
-		console.log('Material has changed. Triggering update from ThreeJSScene.svelte');
-		hiddenMaterialReference = JSON.stringify($material);
-	}
-
-	$: updateFromMaterial($activeMaterial);
 </script>
 
 <svelte:window on:resize={onWindowResize} on:mouseup={onMouseUp} />
@@ -175,10 +165,7 @@
 	on:pointerdown={onMouseDown}
 	on:pointermove={onMouseDrag}
 	bind:this={threeCanvas}
->
-	<!-- Input Necessary to force renders when the active material changes -->
-	<input type="hidden" bind:value={hiddenMaterialReference} />
-</canvas>
+/>
 
 <style>
 	.canvas {
