@@ -1,6 +1,6 @@
 <script>
-	import { zoomStore as zoom } from '$lib/stores';
-	//Maybe put a span over the center of the screen to catch zoom scrolls, otherwise, the page should scroll
+	import { zoom } from '$lib/stores';
+	//TODO: Maybe put a span over the center of the screen to catch zoom scrolls, otherwise, the page should scroll
 	export let min = 0,
 		max = 100,
 		step = 1;
@@ -12,11 +12,7 @@
 		backgroundColor = 'transparent',
 		trackColor = '#eaeaea';
 
-	const setZoom = (event) => {
-		const val = event?.target?.value;
-		zoom.setFromSlider(val);
-		left = val;
-	};
+	const setZoom = (e) => zoom.setFromSlider(e?.target?.value);
 	$: left = `${$zoom}%`;
 </script>
 

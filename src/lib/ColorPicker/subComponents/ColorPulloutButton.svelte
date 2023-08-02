@@ -1,26 +1,29 @@
 <script>
-	//https://github.com/NMacOmega/fidget/actions/runs/5482528004/jobs/9987948534
 	import { selectedUUID, hsl, metalness, opacity, glossiness } from '$lib/stores';
 	import Icon from '$lib/Icon/Icon.svelte';
+
 	export let isOpen = false;
 
-	let icon, activeClass;
-
 	//css variables
-	let materialColor,
-		alphaColor,
-		metalColor,
-		metalBackgroundColor,
-		glossyColor,
-		glossyBackgroundColor,
-		alphaPath,
-		metalPath,
-		metalBackgroundPath,
-		glossyPath,
-		glossyBackgroundPath,
+	let icon,
 		transition = 'all 0.2s';
+	const colors = {
+		material: '',
+		alpha: '',
+		metalness: '',
+		metalnessBG: '',
+		glossiness: '',
+		glossinessBG: ''
+	};
+	const clipPaths = {
+		alpha: '',
+		metalness: '',
+		metalnessBG: '',
+		glossiness: '',
+		glossinessBG: ''
+	};
 
-	const toggleTransition = (UUID_trigger) => {
+	const toggleTransitionOnMaterialChange = (UUID_trigger) => {
 		transition = 'all .2s';
 		setTimeout(() => {
 			transition = '';
@@ -29,59 +32,63 @@
 
 	const generateStyle = (hsl, metalness, opacity, glossiness) => {
 		const { h, s, l } = hsl;
-		const dullS = s / 2,
-			dullL = l / 2;
-		materialColor = `hsl(${h}deg ${s}% ${l}%)`;
-		alphaColor = `hsl(${h}deg ${dullS}% ${dullL}%)`;
-		metalColor = `hsl(0deg 0% 60%)`;
-		metalBackgroundColor = `hsl(0deg 0% 10%)`;
-		glossyColor = `hsl(${h}deg 100% 70%)`;
-		glossyBackgroundColor = `hsl(${h}deg 100% 10%)`;
+		const dullS = (s * 100) / 2,
+			dullL = (l * 100) / 2;
 
-		const glossyPercent = 100 - glossiness * 100;
-		let metalPercent = 100 - metalness * 100;
-		if (metalPercent > 97) metalPercent = 100;
-		let alphaPercent = (1 - opacity) * 100;
-		if (alphaPercent > 90) alphaPercent = 90;
+		colors.material = `hsl(${h}deg ${s * 100}% ${l * 100}%)`;
+		colors.alpha = `hsl(${h}deg ${dullS}% ${dullL}%)`;
+		colors.metalness = `hsl(0deg 0% 60%)`;
+		colors.metalnessBG = `hsl(0deg 0% 10%)`;
+		colors.glossiness = `hsl(${h}deg 100% 70%)`;
+		colors.glossinessBG = `hsl(${h}deg 100% 10%)`;
 
-		alphaPath = `polygon(0% ${alphaPercent}%, 100% ${alphaPercent}%, 100% 0%, 0% 0%)`;
-		metalPath = `polygon(0% 100%, 100% 100%, 100% ${metalPercent}%, 0% ${metalPercent}%)`;
-		metalBackgroundPath = `polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%)`;
-		glossyPath = `polygon(0% 100%, 50% 100%, 50% ${glossyPercent}%, 0% ${glossyPercent}%)`;
-		glossyBackgroundPath = `polygon(50% 0%, 0% 0%, 0% 100%, 50% 100%)`;
+		const g = 100 - glossiness * 100;
+		let m = 100 - metalness * 100;
+		let o = 100 - opacity * 100;
+		if (m > 97) m = 100;
+		if (o > 90) o = 90;
+
+		clipPaths.alpha = `polygon(0% ${o}%, 100% ${o}%, 100% 0%, 0% 0%)`;
+		clipPaths.metalness = `polygon(0% 100%, 100% 100%, 100% ${m}%, 0% ${m}%)`;
+		clipPaths.metalnessBG = `polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%)`;
+		clipPaths.glossiness = `polygon(0% 100%, 50% 100%, 50% ${g}%, 0% ${g}%)`;
+		clipPaths.glossinessBG = `polygon(50% 0%, 0% 0%, 0% 100%, 50% 100%)`;
 	};
 
-	const onClick = () => {
-		isOpen = !isOpen;
-	};
-
-	$: toggleTransition($selectedUUID);
+	$: toggleTransitionOnMaterialChange($selectedUUID);
 	$: generateStyle($hsl, $metalness, $opacity, $glossiness);
 	$: icon = isOpen ? 'close' : 'play';
-	$: activeClass = isOpen ? 'active' : '';
 </script>
 
 <button
-	class={`openColorPickerButton ${activeClass}`}
+	class={`openColorPickerButton ${isOpen ? 'active' : ''}`}
 	style:--transition-timeout={transition}
-	on:click={onClick}
+	on:click
 >
 	<span
 		class="glossyBackground"
-		style:--color={glossyBackgroundColor}
-		style:--clip-path={glossyBackgroundPath}
+		style:--color={colors.glossinessBG}
+		style:--clip-path={clipPaths.glossinessBG}
 	>
-		<span class="glossySpan" style:--color={glossyColor} style:--clip-path={glossyPath} />
+		<span
+			class="glossySpan"
+			style:--color={colors.glossiness}
+			style:--clip-path={clipPaths.glossiness}
+		/>
 	</span>
 	<span
 		class="metalBackground"
-		style:--color={metalBackgroundColor}
-		style:--clip-path={metalBackgroundPath}
+		style:--color={colors.metalnessBG}
+		style:--clip-path={clipPaths.metalnessBG}
 	>
-		<span class="metalSpan" style:--color={metalColor} style:--clip-path={metalPath} />
+		<span
+			class="metalSpan"
+			style:--color={colors.metalness}
+			style:--clip-path={clipPaths.metalness}
+		/>
 	</span>
-	<span class="colorSpan" style:--color={materialColor} />
-	<span class="alphaSpan" style:--color={alphaColor} style:--clip-path={alphaPath} />
+	<span class="colorSpan" style:--color={colors.material} />
+	<span class="alphaSpan" style:--color={colors.alpha} style:--clip-path={clipPaths.alpha} />
 	<span class="iconSpan">
 		<Icon class={`fa-solid fa-${icon}`} />
 	</span>
@@ -97,11 +104,11 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: 100%;
+		transform: translate(30%, 250%);
 		width: 75px;
 		height: 75px;
 
 		transition: all 1.1s;
-		transform: translate(30%, 250%);
 	}
 
 	.active {

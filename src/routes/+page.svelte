@@ -1,13 +1,10 @@
 <script lang="ts">
 	import ThreeJsScene from '$lib/ThreeJsScene/ThreeJsScene.svelte';
 	import Icon from '$lib/Icon/Icon.svelte';
-	import { changeCameraFocus } from '$lib/ThreeJsScene/ThreeJsCamera';
+	import { camera } from '$lib/stores';
 	import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
 	import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
 	import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
-
-	const cameraNext = () => changeCameraFocus('next');
-	const cameraPrev = () => changeCameraFocus('prev');
 </script>
 
 <section class="firstSection">
@@ -22,10 +19,10 @@
 <section class="secondSection">
 	<div class="demo">
 		<ThreeJsScene />
-		<button class="cameraButton prev" on:click={cameraPrev}
+		<button class="cameraButton prev" on:click={() => camera.prev()}
 			><Icon class="fa-solid fa-angle-left" /></button
 		>
-		<button class="cameraButton next" on:click={cameraNext}
+		<button class="cameraButton next" on:click={() => camera.next()}
 			><Icon class="fa-solid fa-angle-right" /></button
 		>
 		<ColorPicker />

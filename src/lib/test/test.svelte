@@ -1,9 +1,6 @@
 <script>
 	import { selectedUUID, hsl, hsv, rgb, hex } from '$lib/stores';
-	import { colorStore } from '$lib/colorStore';
-	import { opacity } from '$lib/materialStores';
-	import { activeMaterial } from '$lib/materialStores';
-	let hslString, hsvString, rgbString, colorString;
+	let hslString, hsvString, rgbString;
 
 	// function update($activeMaterial) {
 	// 	hslString = JSON.stringify($hsl);
@@ -33,12 +30,6 @@
 	</div>
 	<div class="test-section">
 		<p>Hex: {$hex}</p>
-	</div>
-	<div class="test-section">
-		<p>opacity: {$opacity}</p>
-	</div>
-	<div class="test-section">
-		<p>{colorString}</p>
 	</div>
 </div>
 

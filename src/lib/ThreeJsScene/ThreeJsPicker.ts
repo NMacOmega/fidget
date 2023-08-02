@@ -1,21 +1,20 @@
 import { Raycaster } from 'three';
-import { canvasStore, cameraStore, sceneStore} from '$lib/stores';
+import { canvas, camera, scene} from '$lib/stores';
 import {get} from 'svelte/store';
 
 export function getPickPosition(event) {
-	const canvas = get(canvasStore);
+	const c = get(canvas);
 	const pos = getCanvasRelativePosition(event);
-	return {x: (pos.x / canvas.clientWidth) * 2 - 1, 
-		y:(pos.y / canvas.clientHeight) * -2 + 1 // note we flip Y
+	return {x: (pos.x / c.clientWidth) * 2 - 1, 
+		y:(pos.y / c.clientHeight) * -2 + 1 // note we flip Y
 	};
 }
 
 export function pickObjectFromPosition(normalizedPosition) {
-	const camera = get(cameraStore);
-	const scene = get(sceneStore);
+	const cam = get(camera);
 	const raycaster = new Raycaster();
-	raycaster.setFromCamera(normalizedPosition, camera);
-	const intersectedObjects = raycaster.intersectObjects(scene.children);
+	raycaster.setFromCamera(normalizedPosition, cam);
+	const intersectedObjects = raycaster.intersectObjects(get(scene).children);
 
 	for (const intersect of intersectedObjects) {
 		// Pick the first visible object hit
@@ -25,11 +24,11 @@ export function pickObjectFromPosition(normalizedPosition) {
 }
 
 export function getCanvasRelativePosition(event) {
-	const canvas = get(canvasStore);
-	const rect = canvas.getBoundingClientRect();
+	const c = get(canvas);
+	const rect = c.getBoundingClientRect();
 	return {
-		x: ((event.clientX - rect.left) * canvas.clientWidth) / rect.width,
-		y: ((event.clientY - rect.top) * canvas.clientHeight) / rect.height
+		x: ((event.clientX - rect.left) * c.clientWidth) / rect.width,
+		y: ((event.clientY - rect.top) * c.clientHeight) / rect.height
 	};
 }
 

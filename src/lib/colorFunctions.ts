@@ -1,59 +1,126 @@
-export function parseRGB (props) {
- return props;
-};
+type numberParams = [number, number, number, boolean] | [number, number ,number];
 
 
-export function parseHSL(props) {
-    return props;
-};
+export function parseColor(value){
+   if(!value) return undefined;
+//    console.log(value);
 
-export function parseHSV(props) {
-    return props;
-};
+   const hsv = parseHSV(value);
+   if(hsv) {
+	   const rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
+	return {
+		hsv, 
+		hsl: HSVtoHSL(hsv.h, hsv.s, hsv.v),
+		rgb,
+		hex: RGBtoHEX(rgb.r, rgb.g, rgb.b)
+	};}
+   
+   const hsl = parseHSL(value);
+   if(hsl) {
+	console.log('HSL: ',hsl.h, hsl.s, hsl.l);
+	const hsv = HSLtoHSV(hsl.h, hsl.s, hsl.l);
+	const rgb = HSVtoRGB(hsv.h, hsv.s, hsv.v);
+	return {
+		hsv, 
+		hsl, 
+		rgb,
+		hex: RGBtoHEX(rgb.r, rgb.g, rgb.b)
+	}};
 
-export function parseHEX(props) {
-    return props;
-};
+	const rgb = parseRGB(value);
+	if(rgb) {
+		const hsv = RGBtoHSV(rgb.r, rgb.g, rgb.b);
+		return {
+			hsv, 
+			hsl: HSVtoHSL(hsv.h, hsv.s, hsv.v),
+			rgb,
+			hex: RGBtoHEX(rgb.r, rgb.g, rgb.b)
+		}};
+
+	 const hex = parseHEX(value);
+	 if(hex) {
+		const rgb = HEXtoRGB(hex);
+		const hsv = RGBtoHSV(rgb.r, rgb.g, rgb.b);
+		return {
+			hsv,  
+			hsl: HSVtoHSL(hsv.h, hsv.s, hsv.v),
+			rgb,
+			hex
+		}};
+   }
 
 
-//RGB Conversions
+//Paerser FUNCTIONS
+function parseHSL(val){
+ if(typeof val === 'string'){
+
+ }
+
+const {h: hue, s: saturation, l: luminosity} = val;
+const [h, s, l] = parseMultiValue([
+	[hue, 360, 0],
+	[saturation, 1, 0, true],
+	[luminosity, 1, 0, true]]);
+ if(typeof(h) === 'number' 
+ && typeof(s) === 'number' 
+ && typeof(l) === 'number') return {h, s, l};
+}
+
+export function parseHEX(val){
+	let hex = '';
+	if(typeof(val) === 'number') hex = val.toString(16);
+	if(typeof(val) === 'string') hex = val;
+	hex = (hex.match(/[\dA-Fa-f]/g) || []).join("");
+	if(hex.length === 3) hex = `${hex}${hex}`;
+	if(hex.length !== 6) return;
+	hex = hex.toUpperCase();
+	return hex;
+}
+
+
+function parseHSV(val){
+	if(typeof val === 'string'){
+
+	}
+   
+   const {h: hue, s: saturation, v: value} = val;
+   const [h, s, v] = parseMultiValue([
+	   [hue, 360, 0],
+	   [saturation, 1, 0, true],
+	   [value, 1, 0, true]]);
+   
+	if(typeof(h) === 'number' 
+	&& typeof(s) === 'number' 
+	&& typeof(v) === 'number') return {h, s, v};
+   }
+
+   function parseRGB(val){
+	if(typeof val === 'string'){
+
+	}
+   
+   const {r: red, g:green, b:blue} = val;
+   const [r, g, b] = parseMultiValue([
+	   [red, 255, 0],
+	   [green, 255, 0],
+	   [blue, 255, 0]]);
+   
+	if(typeof(r) === 'number' 
+	&& typeof(g) === 'number' 
+	&& typeof(b) === 'number') return {r, g, b};
+   }
+//////////////////////////////////////////////////////////////
+//CONVERSION FUNCTIONS
+
 /**
- * Convert RGBA to Hex.
- * @param {object} rgba Red, green, blue and alpha values.
- * @return {string} Hex color string.
+ * Convert RGBA to HSV.
+ * @param {object} rgb Red, green, and blue values.
+ * @return {object} Hue, saturation, value values.
  */
-export function RGBtoHEX(rgb) {
-    let R = rgb.r.toString(16);
-	let G = rgb.g.toString(16);
-	let B = rgb.b.toString(16);
-
-	if (rgb.r < 16) {
-		R = '0' + R;
-	}
-	
-	if (rgb.g < 16) {
-		G = '0' + G;
-	}
-	
-	if (rgb.b < 16) {
-		B = '0' + B;
-	}
-	return '#' + R + G + B;
-};
-
-export function RGBtoHSL(rgb) {
-    const hsv = RGBtoHSV(rgb);
-    return HSVtoHSL(hsv);
-};
-/**
- * Convert RGBA to HSVA.
- * @param {object} rgba Red, green, blue and alpha values.
- * @return {object} Hue, saturation, value and alpha values.
- */
-export function RGBtoHSV(rgb) {
-    const red = rgb.r / 255;
-	const green = rgb.g / 255;
-	const blue = rgb.b / 255;
+function RGBtoHSV(r, g, b) {
+    const red = r / 255;
+	const green = g / 255;
+	const blue = b / 255;
 	const xmax = Math.max(red, green, blue);
 	const xmin = Math.min(red, green, blue);
 	const chroma = xmax - xmin;
@@ -77,24 +144,37 @@ export function RGBtoHSV(rgb) {
 	}
 
 	hue = Math.floor(hue * 60);
-
 	return {
 		h: hue < 0 ? hue + 360 : hue,
-		s: Math.round(saturation * 100),
-		v: Math.round(value * 100),
+		s: parseFloat(saturation.toFixed(3)),
+		v: parseFloat(value.toFixed(3))
 	};
 };
 
-//HSV Conversions
+
+/**
+ * Convert HSL to HSV.
+ * @param {object} rgb Hue, saturation, and lightness values.
+ * @return {object} Hue, saturation, value values.
+ */
+function HSLtoHSV(h, s, l) {
+    const value = l + s * Math.min(l, 1-l);
+	return{
+		h,
+		s: (value === 0) ? 0 : 2*(1- l/value),
+		v: value,
+	};
+};
+
+
 /**
  * Convert HSVA to RGBA.
  * @param {object} hsv Hue, saturation, value.
  * @return {object} Red, green, blue and alpha values.
  */
-export function HSVtoRGB(hsv) {
-	const {h, s, v} = hsv;
-    const saturation = s / 100;
-	const value = v / 100;
+function HSVtoRGB(h, s, v) {
+    const saturation = s;
+	const value = v;
 	const hueBy60 = h / 60;
 	let chroma = saturation * value;
 	let x = chroma * (1 - Math.abs((hueBy60 % 2) - 1));
@@ -121,81 +201,99 @@ export function HSVtoRGB(hsv) {
  * @param {object} hsva Hue, saturation, value and alpha values.
  * @return {object} Hue, saturation, lightness and alpha values.
  */
-export function HSVtoHSL(hsv) {
-    const value = hsv.v / 100;
-	const lightness = value * (1 - hsv.s / 100 / 2);
-	let saturation;
-
-	if (lightness > 0 && lightness < 1) {
-		saturation = Math.round(((value - lightness) / Math.min(lightness, 1 - lightness)) * 100);
-	}
-
+function HSVtoHSL(h, s, v) {
+	const lightness = Math.min(1, Math.max(0, (v * (1 - s / 2))));
+	const saturation = ((v - lightness) / Math.min(lightness, 1 - lightness));
 	return {
-		h: hsv.h,
-		s: saturation || 0,
-		l: Math.round(lightness * 100),
+		h,
+		s: parseFloat(saturation.toFixed(3)),
+		l: parseFloat(lightness.toFixed(3)),
 	};
 };
 
-export function HSVtoHEX(hsv) {
-    const rgb = HSVtoRGB(hsv);
-	console.log(rgb);
-    return RGBtoHEX(rgb);
-};
-
-//HSL Conversions
-export function HSLtoRGB(hsl) {
-    const hsv = HSLtoHSV(hsl);
-    return HSVtoRGB(hsv);
-};
-
-export function HSLtoHSV(hsl) {
-    const value = hsl.l + hsl.s * Math.min(hsl.l, 1-hsl.l);
-	return{
-		h: hsl.h,
-		s: (value === 0) ? 0 : 2*(1- hsl.l/value),
-		v: value,
-	};
-};
-
-export function HSLtoHEX(hsl){
-    const rgb = HSLtoRGB(hsl);
-    return RGBtoHEX(rgb);
-};
 
 
-//HEX Conversions
 
-export function HEXtoRGB(hex: string) {
-    if(isHex(hex)) {
-		const values = hex.match(/\w\w/g);
-		const [r, g, b] = values.map((k)=>parseInt(k,16));
-		return {r, g, b};
-	}
+function HEXtoRGB(hex: string) {
+	const values = hex.replaceAll('#', '').match(/\w\w/g);
+    const [r, g, b] = values.map((k)=>parseInt(k,16));
+	return {r, g, b};
 	//Add code if isSHorthex like #fff or fff
 };
 
-export function HEXtoHSV(hex) {
-    const rgb = HEXtoRGB(hex);
-    return RGBtoHSV(rgb);
+
+/**
+ * Convert RGBA to Hex.
+ * @param {object} rgba Red, green, blue and alpha values.
+ * @return {string} Hex color string.
+ */
+function RGBtoHEX(r, g, b) {
+    let R = r.toString(16);
+	let G = g.toString(16);
+	let B = b.toString(16);
+
+	if (r < 16) {
+		R = '0' + R;
+	}
+	
+	if (g < 16) {
+		G = '0' + G;
+	}
+	
+	if (b < 16) {
+		B = '0' + B;
+	}
+	return R + G + B;
 };
 
-export function HEXtoHSL(hex) {
-    const rgb = HEXtoRGB(hex);
-    return RGBtoHSV(rgb);    
-};
 
 
+//--------------------------------------------
+//Utility Functions
+function parseMultiValue(paramsArray: numberParams[]){
+	const results: Array<number | undefined> = [];
+
+	paramsArray.forEach(([val, max, min, isPercent=false])=>{
+		if(typeof val !== 'number') results.push(undefined);
+		else{
+			if(isPercent && val > 1) val /= 100;
+			if(typeof(max) === 'number' && val > max) val = max;
+			if(typeof(min) === 'number' && val < min) val = min;
+			results.push(val);
+		}
+	});
+	return results;
 
 
-//Support Functions
-
-
-
-function isHex(val){
-	return /^#([A-Fa-f0-9]{6})|([A-Fa-f0-9]{6})/.test(val);
 }
 
-function isShortHex(val){
-	return /^#([A-Fa-f0-9]{3})|([A-Fa-f0-9]{3})/.test(val);
-}
+
+
+// Nice Idea Functions
+
+// /**
+//  * Update the color marker's accessibility label.
+//  * @param {number} saturation
+//  * @param {number} value
+//  */
+// function updateMarkerA11yLabel(saturation, value) {
+// 	let label = settings.a11y.marker;
+
+// 	saturation = saturation.toFixed(1) * 1;
+// 	value = value.toFixed(1) * 1;
+// 	label = label.replace('{s}', saturation);
+// 	label = label.replace('{v}', value);
+// 	colorMarker.setAttribute('aria-label', label);
+// }
+
+// /**
+//  * Move the color marker when the arrow keys are pressed.
+//  * @param {number} offsetX The horizontal amount to move.
+//  * @param {number} offsetY The vertical amount to move.
+//  */
+// function moveMarkerOnKeydown(offsetX, offsetY) {
+// 	let x = colorMarker.style.left.replace('px', '') * 1 + offsetX;
+// 	let y = colorMarker.style.top.replace('px', '') * 1 + offsetY;
+
+// 	setMarkerPosition(x, y);
+// }

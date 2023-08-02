@@ -10,6 +10,8 @@
 	//CSS Variables
 	let left, color, borderShape, markerShape, markerColor, markerBorder, hslBackground;
 
+	const clamp = (num, max, min) => Math.min(max, Math.max(min, num));
+
 	const generateStyle = (metalness) => {
 		const leftPercent = metalness * 100 || 0;
 		left = `${leftPercent}%`;
@@ -22,19 +24,10 @@
 		let b = width * a * Math.tan(angle);
 		let c = metalness + 0.2;
 		let d = width * c * Math.tan(angle);
-
-		a = 100 - a * 100;
-		c = 110 - c * 100;
-		b = 110 - (b / height) * 100;
-		d = 100 - (d / height) * 100;
-
-		if (d < 0) d = 0;
-		if (c < 10) c = 10;
-
-		if (a > 83) a = 83;
-		if (b > 93) b = 93;
-		if (c > 75) c = 75;
-		if (d > 65) d = 65;
+		a = clamp(100 - a * 100, 100, -1);
+		b = clamp(110 - (b / height) * 100, 83, 1);
+		c = clamp(110 - c * 100, 75, 10);
+		d = clamp(100 - (d / height) * 100, 65, 0);
 
 		borderShape = `0% 100%, 0% ${a}%, 100% ${d}%, 100% 100%`;
 		markerShape = `5% 93%, 5% ${b}%, 93% ${c}%, 90% 93%`;

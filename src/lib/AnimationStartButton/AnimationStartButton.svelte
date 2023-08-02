@@ -9,17 +9,20 @@
 	};
 </script>
 
-<button
-	class={`animationButton startAnimationButton ${!$enabled ? ' disabled' : ''}`}
-	disabled={!$enabled}
-	on:click={playAnimations}><Icon class="fa-solid fa-play" /></button
->
+<!-- Remove !enabled when styling is done -->
+{#if $enabled || !$enabled}
+	<button class="animationButton startAnimationButton" on:click={playAnimations}
+		><Icon class="fa-solid fa-play playIcon" /></button
+	>
+{/if}
 
 <style>
 	.startAnimationButton {
 		position: absolute;
 		right: 10%;
-		top: 20%;
+		bottom: 10%;
+		width: 60px;
+		height: 60px;
 		background-color: #292929;
 		color: hsl(220, 20%, 50%);
 
@@ -31,7 +34,7 @@
 		border-radius: 16px;
 	}
 
-	.startAnimationButton.disabled {
-		/* background-color: red; */
+	:global(.playIcon) {
+		font-size: 25px;
 	}
 </style>

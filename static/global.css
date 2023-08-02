@@ -2,6 +2,14 @@
 	--color-primary: hsl(1, 0%, 100%);
 	--color-secondary: hsl(56.9, 81.6%, 53.1%);
 	--color-bg-primary: hsl(221.9, 100%, 25.3%);
+	--color-bg-secondary: hsl(221.9, 100%, 25.3%);
+	--color-bg-accent: #e9df26;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
 }
 
 ul,

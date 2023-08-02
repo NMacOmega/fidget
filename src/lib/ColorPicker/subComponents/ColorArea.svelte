@@ -1,58 +1,49 @@
 <script>
-	import { hsv, hex } from '$lib/stores';
+	import { hsv, hex, selectedUUID } from '$lib/stores';
 	let element,
 		isMouseCaptured = false;
 
-	const margin = { max: 95.5, min: -6.5 };
 	//CSS Variables
-	let left, top, leftPercent, topPercent, markerColor, flatMarkerColor;
+	let leftOffset = 0,
+		topOffset = 0;
+	const clamp = (num, max, min) => Math.min(Math.max(num, min), max);
 
-	export const setMarkPos = (saturation = 0, value = 0) => {
-		top = 100 - value;
-		left = saturation;
-	};
-	const updateMarkerColor = ($hex, $hsv) => {
-		markerColor = $hex;
-		flatMarkerColor = `hsl(${$hsv.h || '0'}, 100%, 50%)`;
-	};
-
-	const clampDifference = (a, b, max, min) => {
-		const c = a - b;
-		if (c > max) return max;
-		if (c < min) return min;
-		return c;
+	const updateOffset = (_optionalTrigger, s = $hsv.s, v = 1 - $hsv.v) => {
+		s *= 100;
+		v *= 100;
+		leftOffset = clamp(s, 95.5, -6.5);
+		topOffset = clamp(v, 95.5, -6.5);
 	};
 
-	const onMouseMove = (e) => {
+	const updateSaturationAndValueOnClick = (e) => {
 		if (!isMouseCaptured || !element) return;
-		const { clientX: x, clientY: y } = e;
-		const { top: t, left: l, width: w, height: h } = element.getBoundingClientRect();
-		const s = (x / w) * 100;
-		const v = (y / h) * 100;
-		left = clampDifference(s, l, margin.max, margin.min);
-		top = clampDifference(v, t, margin.max, margin.min);
-		const saturation = clampDifference(s, l, 100, 0);
-		const value = 100 - clampDifference(v, t, 100, 0);
-		$hsv = { ...$hsv, s: saturation, v: value };
+		const { clientX, clientY } = e;
+		const { top, left, width, height } = element.getBoundingClientRect();
+
+		const leftPoint = (clientX - left) / width;
+		const topPoint = (clientY - top) / height;
+
+		const s = clamp(leftPoint, 1, 0);
+		const v = clamp(1 - topPoint, 1, 0.0001);
+		updateOffset(null, leftPoint, topPoint);
+		$hsv = { h: $hsv.h, s, v };
 	};
-
-	window.addEventListener('mousemove', onMouseMove);
-	window.addEventListener('mouseup', () => (isMouseCaptured = false));
-
-	$: updateMarkerColor($hex, $hsv);
-	$: leftPercent = `${left}%`;
-	$: topPercent = `${top}%`;
+	$: updateOffset($selectedUUID);
 </script>
 
+<svelte:window
+	on:mousemove={updateSaturationAndValueOnClick}
+	on:mouseup={() => (isMouseCaptured = false)}
+/>
 <div
 	class="colorArea"
-	style:--left={leftPercent}
-	style:--top={topPercent}
-	style:--color={markerColor}
-	style:--flatcolor={flatMarkerColor}
+	style:--left={`${leftOffset}%`}
+	style:--top={`${topOffset}%`}
+	style:--color={$hex}
+	style:--flatcolor={`hsl(${$hsv.h || '0'}, 100%, 50%)`}
 	on:mousedown={(e) => {
 		isMouseCaptured = true;
-		onMouseMove(e);
+		updateSaturationAndValueOnClick(e);
 	}}
 	bind:this={element}
 >
@@ -65,9 +56,8 @@
 		width: 95%;
 		margin: auto;
 		height: 100px;
-
 		background-image: linear-gradient(rgba(0, 0, 0, 0), #000),
-			linear-gradient(90deg, #fff, var(--flatcolor));
+			linear-gradient(90deg, #fff, 44%, var(--flatcolor));
 	}
 
 	.colorMarker {
