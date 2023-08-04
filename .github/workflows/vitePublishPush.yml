@@ -23,7 +23,7 @@ jobs:
       - name: build
         env:
           BASE_PATH: '/fidget'
-          MODEL_URL: ${{ vars.MODEL_URL }}
+          MODEL_URL: '${{ vars.MODEL_URL }}'
         run: |
           echo "Model url is: $MODEL_URL" 
           npm run build
