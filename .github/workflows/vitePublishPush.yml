@@ -23,6 +23,7 @@ jobs:
       - name: build
         env:
           BASE_PATH: '/fidget'
+          MODEL_URL: ${{ vars.MODEL_URL }}
         run: |
           npm run build
           touch build/.nojekyll
