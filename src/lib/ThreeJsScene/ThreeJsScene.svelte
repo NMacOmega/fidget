@@ -5,14 +5,11 @@
 	import { onMouseDown, onMouseUp, onMouseDrag } from './ThreeJsEvents';
 	import { selectedUUID } from '$lib/stores';
 
-	//Maybe moove this URL string reference to the Init TS File?
-	const modelURL = import.meta.env.DEV
-		? '/models/fidgetgallery.glb'
-		: '/fidget/static/models/fidgetgallery.glb';
+	export let modelURL: string;
 
 	let threeCanvas: HTMLCanvasElement;
 
-	if (browser) {
+	if (browser && modelURL) {
 		onMount(() => {
 			init(threeCanvas, modelURL);
 			onWindowResize(threeCanvas);

@@ -26,6 +26,7 @@
  * ```
  */
 declare module '$env/static/private' {
+	export const MODEL_URL: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
 	export const AV_APPDATA: string;
@@ -153,6 +154,7 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
+		MODEL_URL: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
 		AV_APPDATA: string;
