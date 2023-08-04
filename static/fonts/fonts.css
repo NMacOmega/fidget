@@ -1,7 +1,11 @@
+:root {
+	--eot-url: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.eot');
+}
+
 @font-face {
 	font-family: 'Twentieth Century Bold';
 	/* IE9*/
-	src: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.eot');
+	src: var(--eot-url);
 	src: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.eot?#iefix')
 			format('embedded-opentype'),
 		/* IE6-IE8 */ url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.woff2')
