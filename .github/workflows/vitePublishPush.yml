@@ -63,8 +63,9 @@ jobs:
       - name: build
         env:
           BASE_PATH: '/fidget'
+          PUBLIC_MODEL_URL: ${{vars.PUBLIC_MODEL_URL}}
         run: |
-          echo "Model url is: $MODEL_URL" 
+          echo "Model url is: $PUBLIC_MODEL_URL" 
           npm run build
           touch build/.nojekyll
 
