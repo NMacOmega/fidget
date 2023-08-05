@@ -16,7 +16,7 @@ jobs:
       - name: npm install and build
         env:
           BASE_PATH: '/fidget'
-          MODEL_URL: '${{ vars.MODEL_URL }}'
+          MODEL_URL: '/GoodGrief'
         run: |
           npm install
           npm run build
@@ -33,5 +33,6 @@ jobs:
           REPO: self
           BRANCH: gh-pages
           FOLDER: ./
+          SQUASH_HISTORY: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_DIR: ./
