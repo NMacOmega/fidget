@@ -62,8 +62,8 @@ jobs:
 
       - name: build
         env:
-          BASE_PATH: '/fidget'
-          PUBLIC_MODEL_URL: ${{vars.PUBLIC_MODEL_URL}}
+          BASE_PATH: '/${{ github.event.repository.name }}'
+          PUBLIC_MODEL_URL: '/${{ github.event.repository.name }}/${{vars.PUBLIC_MODEL_URL}}'
         run: |
           echo "Model url is: $PUBLIC_MODEL_URL" 
           echo "REPO: ${{ github.event.repository.name }}"
