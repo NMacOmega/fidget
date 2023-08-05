@@ -5,6 +5,7 @@
 	import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
 	import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
 	import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
+	import { PUBLIC_MODEL_URL } from '$env/static/public';
 </script>
 
 <section class="firstSection">
@@ -12,13 +13,13 @@
 	<p class="intro">
 		I made these fidget models in
 		<a href="https://www.blender.org/">Blender</a> and added interactivity to them with
-		<a href="https://threejs.org/">threeJS</a>. WUTT!
+		<a href="https://threejs.org/">threeJS</a>. !{PUBLIC_MODEL_URL}!
 	</p>
 </section>
 
 <section class="secondSection">
 	<div class="demo">
-		<ThreeJsScene modelURL={''} />
+		<ThreeJsScene modelURL={PUBLIC_MODEL_URL || ''} />
 		<button class="cameraButton prev" on:click={() => camera.prev()}
 			><Icon class="fa-solid fa-angle-left" /></button
 		>
