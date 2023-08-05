@@ -45,7 +45,7 @@ jobs:
           git config advice.addIgnoredFile false
           git add .
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push
+          git push -f origin gh-pages
 
       # - name: Push
       #   uses: s0/git-publish-subdir-action@develop

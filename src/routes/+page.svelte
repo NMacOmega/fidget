@@ -6,6 +6,7 @@
 	import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
 	import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
 	export let data;
+	console.log(data);
 </script>
 
 <section class="firstSection">
@@ -19,7 +20,7 @@
 
 <section class="secondSection">
 	<div class="demo">
-		<ThreeJsScene modelURL={data.modelURL} />
+		<ThreeJsScene modelURL={data.modelURL || ''} />
 		<button class="cameraButton prev" on:click={() => camera.prev()}
 			><Icon class="fa-solid fa-angle-left" /></button
 		>
