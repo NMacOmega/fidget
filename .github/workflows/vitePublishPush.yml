@@ -48,7 +48,7 @@ jobs:
 
           git add * -f
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push -f
+          git push -f gh-pages
 
       # - name: Push
       #   uses: s0/git-publish-subdir-action@develop
