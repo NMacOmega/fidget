@@ -5,8 +5,6 @@
 	import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
 	import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
 	import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
-	export let data = { modelURL: '' };
-	console.log(data);
 </script>
 
 <section class="firstSection">
@@ -20,7 +18,7 @@
 
 <section class="secondSection">
 	<div class="demo">
-		<ThreeJsScene modelURL={data.modelURL} />
+		<ThreeJsScene modelURL={''} />
 		<button class="cameraButton prev" on:click={() => camera.prev()}
 			><Icon class="fa-solid fa-angle-left" /></button
 		>
