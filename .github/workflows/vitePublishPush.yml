@@ -1,78 +1,37 @@
 name: Deploy to GitHub Pages
-
 on:
   push:
     branches: 'main'
 
 jobs:
-  build_site:
+  deploy:
+    name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@master
+      - name: Use Node.js
+        uses: actions/setup-node@main
         with:
-          node-version: 18
-          cache: npm
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: build
+          node-version: 18.x
+      - name: npm install and build
         env:
           BASE_PATH: '/fidget'
           MODEL_URL: '${{ vars.MODEL_URL }}'
         run: |
-          echo "Model url is: $MODEL_URL" 
+          npm install
           npm run build
           touch build/.nojekyll
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v1
         with:
-          # this should match the `pages` option in your adapter-static options
           path: 'build/'
 
-      - name: GIT commit and push docs
+      - name: Deploy
+        uses: s0/git-publish-subdir-action@develop
         env:
-          CI_COMMIT_MESSAGE: Continuous Integration Build Artifacts
-          CI_COMMIT_AUTHOR: Continuous Integration
+          REPO: self
           BRANCH: gh-pages
           FOLDER: ./
-        run: |
-          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-          git config --global user.email "username@users.noreply.github.com"
-          git config advice.addIgnoredFile false
-          git add .
-          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push
-
-      # - name: Push
-      #   uses: s0/git-publish-subdir-action@develop
-      #   env:
-      #     REPO: self
-      #     BRANCH: gh-pages # The branch name where you want to push the assets
-      #     FOLDER: ./
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token
-      #     MESSAGE: 'Build: ({sha}) {msg}' # The commit message
-
-  deploy:
-    needs: build_site
-    runs-on: ubuntu-latest
-
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v1
-
-  # https://kit.svelte.dev/docs/adapter-static#github-pages
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_DIR: ./
