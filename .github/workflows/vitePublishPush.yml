@@ -34,5 +34,4 @@ jobs:
           BRANCH: gh-pages
           FOLDER: ./
           TARGET_DIR: ./
-          SQUASH_HISTORY: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
