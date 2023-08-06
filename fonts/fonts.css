@@ -1,10 +1,10 @@
 :root {
-	--eot-url: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.eot');
-	--opentype-url: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.eot?#iefix');
-	--woff2-url: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.woff2');
-	--woff-url: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.woff');
-	--ttf-url: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.ttf');
-	--svg-url: url('./fonts/twentiethCentury/90cb7bb668481e6489432e687533592a.svg#Twentieth Century Bold');
+	--eot-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.eot');
+	--opentype-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.eot?#iefix');
+	--woff2-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.woff2');
+	--woff-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.woff');
+	--ttf-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.ttf');
+	--svg-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.svg#Twentieth Century Bold');
 }
 
 @font-face {
