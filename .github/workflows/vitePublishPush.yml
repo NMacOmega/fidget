@@ -51,8 +51,6 @@ jobs:
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
-        with:
-          name: build_artifact
 
       - name: Deploy
         id: deployment
@@ -66,7 +64,8 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Test Print
-        run: echo "artifacts downloaded:"
+        run: |
+          echo "artifacts downloaded:"
           echo build
 
       - name: Extract TAR files
