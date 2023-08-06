@@ -53,7 +53,7 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: build
+          name: build_artifact
 
       - name: Deploy
         id: deployment
@@ -70,6 +70,11 @@ jobs:
 
       - name: Test Print
         run: echo "artifacts downloaded:"
+          echo build
+
+      - name: Extract TAR files
+        run: mkdir build
+          tar -xvf artifact.tar /build
           echo build
 
       - name: Push
