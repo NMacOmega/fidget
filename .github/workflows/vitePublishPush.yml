@@ -35,6 +35,7 @@ jobs:
         with:
           # this should match the `pages` option in your adapter-static options
           path: 'build'
+          name: 'build_artifact'
 
   deploy_to_pages:
     needs: build
@@ -51,6 +52,8 @@ jobs:
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
+        with:
+          name: build_artifact
 
       - name: Deploy
         id: deployment
@@ -62,6 +65,8 @@ jobs:
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
+        with:
+          name: build_artifact
 
       - name: Test Print
         run: |
