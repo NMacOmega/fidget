@@ -66,10 +66,11 @@ jobs:
       - name: Test Print
         run: |
           echo "artifacts downloaded:"
-          echo build
+          echo .
 
       - name: Extract TAR files
-        run: mkdir build
+        run: |
+          mkdir build
           tar -xvf artifact.tar /build
           echo build
 
