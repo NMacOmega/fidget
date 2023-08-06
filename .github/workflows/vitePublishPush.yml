@@ -69,37 +69,3 @@ jobs:
         uses: actions/deploy-pages@v1
         with:
           artifact_name: build_artifact
-
-  # push_to_branch:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download Artifacts
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: build_artifact
-
-  #     - name: Test Print
-  #       run: |
-  #         echo "artifacts downloaded:"
-  #         ls .
-  #         mkdir build
-  #         ls .
-  #         ls build
-  #         ls ./build
-
-  #     - name: Extract TAR files
-  #       run: |
-  #         tar -xvf artifact.tar
-  #         ls build
-
-  #     - name: Push
-  #       uses: s0/git-publish-subdir-action@develop
-  #       env:
-  #         REPO: self
-  #         BRANCH: gh-pages # The branch name where you want to push the assets
-  #         FOLDER: ./
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token
-  #         MESSAGE: 'Build: ({sha}) {msg}' # The commit message
-
-  # https://kit.svelte.dev/docs/adapter-static#github-pages
