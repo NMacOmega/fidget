@@ -33,7 +33,7 @@
 </section>
 
 <section class="thirdSection">
-	<h3 class="cta">Hey, Here is a check to see if you really need that dist directory</h3>
+	<h3 class="cta">Hope you enjoy these fidgets!</h3>
 </section>
 
 <style>
