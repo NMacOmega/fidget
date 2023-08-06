@@ -1,11 +1,11 @@
-name: Build/Push to Github Pages & GH-Pages branch
+name: Build/Push to GH-Pages branch and deploy
 
 on:
   push:
     branches: 'main'
 
 jobs:
-  Build:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,17 +36,8 @@ jobs:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
 
-      # - name: Push
-      #   uses: s0/git-publish-subdir-action@develop
-      #   env:
-      #     REPO: self
-      #     BRANCH: gh-pages # The branch name where you want to push the assets
-      #     FOLDER: ./
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token
-      #     MESSAGE: 'Build: ({sha}) {msg}' # The commit message
-
   deploy_to_pages:
-    needs: Build
+    needs: build
     runs-on: ubuntu-latest
 
     permissions:
@@ -61,5 +52,19 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v1
+
+  push_to_branch:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Push
+        uses: s0/git-publish-subdir-action@develop
+        env:
+          REPO: self
+          BRANCH: gh-pages # The branch name where you want to push the assets
+          FOLDER: build/
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token
+          MESSAGE: 'Build: ({sha}) {msg}' # The commit message
+
 
   # https://kit.svelte.dev/docs/adapter-static#github-pages

@@ -13,7 +13,7 @@
 	<p class="intro">
 		I made these fidget models in
 		<a href="https://www.blender.org/">Blender</a> and added interactivity to them with
-		<a href="https://threejs.org/">TEST STAGE 1</a>.
+		<a href="https://threejs.org/">TEST STAGE 3</a>.
 	</p>
 </section>
 
