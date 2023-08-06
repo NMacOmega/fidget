@@ -66,13 +66,13 @@ jobs:
       - name: Test Print
         run: |
           echo "artifacts downloaded:"
-          echo .
+          ls .
 
       - name: Extract TAR files
         run: |
           mkdir build
-          tar -xvf artifact.tar /build
-          echo build
+          tar -xvf artifact.tar ./build
+          ls build
 
       - name: Push
         uses: s0/git-publish-subdir-action@develop
