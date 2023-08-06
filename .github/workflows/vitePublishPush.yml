@@ -67,6 +67,7 @@ jobs:
         run: |
           echo "artifacts downloaded:"
           ls .
+          ls ./github-pages
 
       - name: Extract TAR files
         run: |
