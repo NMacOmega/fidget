@@ -74,11 +74,11 @@ jobs:
         run: |
           echo "artifacts downloaded:"
           ls .
+          mkdir build
+          ls ./build
 
       - name: Extract TAR files
         run: |
-          mkdir build
-          ls build
           tar -xvf artifact.tar build
           ls build
 
