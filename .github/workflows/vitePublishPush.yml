@@ -78,7 +78,8 @@ jobs:
       - name: Extract TAR files
         run: |
           mkdir build
-          tar -xvf artifact.tar ./build
+          ls build
+          tar -xvf artifact.tar build
           ls build
 
       - name: Push
