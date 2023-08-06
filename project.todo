@@ -1,0 +1,29 @@
+    
+    
+    
+    Priority:
+        ✔ Need functionality to choose first object available when a camera is changed @done (8/2/2023, 10:33:12 AM)
+        ☐ Math is not right on Color selections. Need to set a math baseline
+
+
+    Interface:
+        ☐ Need to make sure the input field works correctly and has a hovering field for mobile when we want to enter text
+        ☐ Color area can still be a little "Sticky" When following the mouse and not updating correctly
+        ✔ Cameras do not work correctly yet, Also the aspect is off when shifting cameras @done (8/2/2023, 11:46:37 AM)
+        ✔ Can we simplify any components and remove context / unnecesary store calls? @done (8/2/2023, 12:13:33 AM)
+        ☐ Maybe put a span in the middle that increases on zoom to catch a zoom event instead of listening just to the mouse wheel?
+
+    Other Considerations for Later:
+        ☐ Why is the golden globe invisible?
+        ✔ Discs still look like the aspect is wierd @done (8/2/2023, 11:53:45 AM)
+        ☐ Fix Compilation problems that keep github from hosting project
+        ☐ Begin mobile considerations
+    
+    Styling:
+        ✔ Green highlights should be changed to on-brand yellow. On-brand yellow should be made a global color choice @done (7/30/2023, 11:58:29 PM)
+        ☐ Styling needs to be inproved for the Color swatches, they are smushed together
+        ☐ Animation button needs styling finished
+        ☐ Submenu open/close button needs styling
+
+
+        ☐ https://threlte.xyz/docs/examples/intro
