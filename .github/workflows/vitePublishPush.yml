@@ -34,8 +34,8 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # this should match the `pages` option in your adapter-static options
-          name: build
-          path: 'build/'
+          name: build_artifact
+          path: '/build'
 
   deploy_to_pages:
     needs: build
@@ -66,7 +66,11 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: build
+          name: build_artifact
+
+      - name: Test Print
+        run: echo "artifacts downloaded:"
+          echo build
 
       - name: Push
         uses: s0/git-publish-subdir-action@develop
