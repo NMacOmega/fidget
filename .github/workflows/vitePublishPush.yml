@@ -55,10 +55,6 @@ jobs:
         with:
           name: build_artifact
 
-      - name: Test Print
-        run: |
-          ls .
-
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v1
@@ -78,7 +74,6 @@ jobs:
         run: |
           echo "artifacts downloaded:"
           ls .
-          ls ./github-pages
 
       - name: Extract TAR files
         run: |
