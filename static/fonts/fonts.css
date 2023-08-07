@@ -1,20 +1,17 @@
-:root {
-	--eot-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.eot');
-	--opentype-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.eot?#iefix');
-	--woff2-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.woff2');
-	--woff-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.woff');
-	--ttf-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.ttf');
-	--svg-url: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.svg#Twentieth Century Bold');
-}
-
 @font-face {
 	font-family: 'Twentieth Century Bold';
 	/* IE9*/
-	src: var(--eot-url);
+	src: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.eot');
 	/* IE6-IE8 */
-	src: var(--opentype-url) format('embedded-opentype'),
-		/* chrome、firefox */ var(--woff2-url) format('woff2'),
-		/* chrome、firefox */ var(--woff-url) format('woff'),
-		/* chrome、firefox、opera、Safari, Android, iOS 4.2+*/ var(--ttf-url) format('truetype'),
-		/* iOS 4.1- */ var(--svg-url) format('svg');
+	src: url('./twentiethCentury/90cb7bb668481e6489432e687533592a.eot?#iefix')
+			format('embedded-opentype'),
+		/* chrome、firefox */ url('./twentiethCentury/90cb7bb668481e6489432e687533592a.woff2')
+			format('woff2'),
+		/* chrome、firefox */ url('./twentiethCentury/90cb7bb668481e6489432e687533592a.woff')
+			format('woff'),
+		/* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
+			url('./twentiethCentury/90cb7bb668481e6489432e687533592a.ttf') format('truetype'),
+		/* iOS 4.1- */
+			url('./twentiethCentury/90cb7bb668481e6489432e687533592a.svg#Twentieth Century Bold')
+			format('svg');
 }
