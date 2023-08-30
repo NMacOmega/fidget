@@ -1,24 +1,40 @@
-<script>
-	import { selectedUUID, hsl, hsv, rgb, hex } from '$lib/stores';
-	let hslString, hsvString, rgbString;
+<script lang="ts">
+	import { hsl, hsv, rgb, hex } from '$stores/material';
+	// import { hslStore, hsvStore, rgbStore, hexStore } from '$lib/materialStores';
+	let hslString, hsvString, rgbString, hexString;
 
-	// function update($activeMaterial) {
-	// 	hslString = JSON.stringify($hsl);
-	// 	hsvString = JSON.stringify($hsv);
-	// 	rgbString = JSON.stringify($rgb);
-	// 	colorString = JSON.stringify($activeMaterial);
-	// }
+	// use this to compare test values. What happens when HSV is 100% and 0%, 0%, 100%, and so on?
+	// https://www.rapidtables.com/convert/color/index.html
 
-	// $: update($activeMaterial);
-	$: hslString = JSON.stringify($hsl);
-	$: hsvString = JSON.stringify($hsv);
-	$: rgbString = JSON.stringify($rgb);
+	const round = (n: number) => n.toFixed(1);
+
+	const hslToString = ({ h, s, l }) => {
+		s *= 100;
+		l *= 100;
+		return `h: ${h}, s: ${round(s)}%, l: ${round(l)}%`;
+	};
+
+	const hsvToString = ({ h, s, v }) => {
+		s *= 100;
+		v *= 100;
+		return `h: ${h}, s: ${round(s)}%, l: ${round(v)}%`;
+	};
+
+	const rgbToString = ({ r, g, b }) => {
+		return `R: ${r}, G: ${g}, B: ${b}`;
+	};
+
+	const test = () => {
+		hsl.setHue(0);
+	};
+
+	$: hslString = hslToString($hsl);
+	$: hsvString = hsvToString($hsv);
+	$: rgbString = rgbToString($rgb);
+	$: hexString = `#${$hex}`;
 </script>
 
 <div class="test">
-	<div class="test-section">
-		<p>UUID: {$selectedUUID}</p>
-	</div>
 	<div class="test-section">
 		<p>HSV: {hsvString}</p>
 	</div>
@@ -29,7 +45,10 @@
 		<p>HSL: {hslString}</p>
 	</div>
 	<div class="test-section">
-		<p>Hex: {$hex}</p>
+		<p>Hex: {hexString}</p>
+	</div>
+	<div class="test-section">
+		<button on:click={test}>Fire!</button>
 	</div>
 </div>
 

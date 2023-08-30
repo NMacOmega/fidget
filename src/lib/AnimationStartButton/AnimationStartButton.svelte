@@ -1,17 +1,11 @@
-<script>
+<script lang="ts">
 	import Icon from '$lib/Icon/Icon.svelte';
-	import { LoopOnce } from 'three';
-	import { availableAnimations as animations, isAnimationsAvailable as enabled } from '$lib/stores';
-	const playAnimations = () => {
-		$animations.map((anim) => {
-			if (anim.play) anim.setLoop(LoopOnce).play().reset();
-		});
-	};
+	import { animations, isAnimationsAvailable } from '$stores/animation';
 </script>
 
 <!-- Remove !enabled when styling is done -->
-{#if $enabled || !$enabled}
-	<button class="animationButton startAnimationButton" on:click={playAnimations}
+{#if $isAnimationsAvailable}
+	<button class="animationButton startAnimationButton" on:click={animations.playAvailable}
 		><Icon class="fa-solid fa-play playIcon" /></button
 	>
 {/if}

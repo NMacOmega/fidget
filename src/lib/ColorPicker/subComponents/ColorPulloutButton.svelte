@@ -1,11 +1,12 @@
-<script>
-	import { selectedUUID, hsl, metalness, opacity, glossiness } from '$lib/stores';
+<script lang="ts">
+	import { selectedUUID, hsl, metalness, opacity, glossiness } from '$stores/material';
 	import Icon from '$lib/Icon/Icon.svelte';
+	import type { HSLColor } from '$lib/colorFunctions';
 
 	export let isOpen = false;
 
 	//css variables
-	let icon,
+	let icon: 'close' | 'play',
 		transition = 'all 0.2s';
 	const colors = {
 		material: '',
@@ -23,14 +24,14 @@
 		glossinessBG: ''
 	};
 
-	const toggleTransitionOnMaterialChange = (UUID_trigger) => {
+	const toggleTransitionOnMaterialChange = (UUID_trigger: any) => {
 		transition = 'all .2s';
 		setTimeout(() => {
 			transition = '';
 		}, 200);
 	};
 
-	const generateStyle = (hsl, metalness, opacity, glossiness) => {
+	const generateStyle = (hsl: HSLColor, metalness: number, opacity: number, glossiness: number) => {
 		const { h, s, l } = hsl;
 		const dullS = (s * 100) / 2,
 			dullL = (l * 100) / 2;

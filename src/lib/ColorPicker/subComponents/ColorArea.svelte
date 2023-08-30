@@ -1,21 +1,29 @@
-<script>
-	import { hsv, hex, selectedUUID } from '$lib/stores';
-	let element,
+<script lang="ts">
+	import { hsv, hex, selectedUUID } from '$stores/material';
+	let element: HTMLElement,
 		isMouseCaptured = false;
 
 	//CSS Variables
 	let leftOffset = 0,
 		topOffset = 0;
-	const clamp = (num, max, min) => Math.min(Math.max(num, min), max);
+	const clamp = (num: number, max: number, min: number) => Math.min(Math.max(num, min), max);
 
-	const updateOffset = (_optionalTrigger, s = $hsv.s, v = 1 - $hsv.v) => {
+	const updateOffset = (
+		_optionalTrigger: typeof $selectedUUID | null,
+		s = $hsv.s,
+		v = 1 - $hsv.v
+	) => {
 		s *= 100;
 		v *= 100;
 		leftOffset = clamp(s, 95.5, -6.5);
 		topOffset = clamp(v, 95.5, -6.5);
 	};
 
-	const updateSaturationAndValueOnClick = (e) => {
+	const updateSaturationAndValueOnClick = (
+		e: MouseEvent & {
+			currentTarget: (EventTarget & HTMLDivElement) | Window;
+		}
+	) => {
 		if (!isMouseCaptured || !element) return;
 		const { clientX, clientY } = e;
 		const { top, left, width, height } = element.getBoundingClientRect();
@@ -32,7 +40,7 @@
 </script>
 
 <svelte:window
-	on:mousemove={updateSaturationAndValueOnClick}
+	on:mousemove={(e) => updateSaturationAndValueOnClick(e)}
 	on:mouseup={() => (isMouseCaptured = false)}
 />
 <div

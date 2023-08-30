@@ -1,20 +1,17 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { init, animate, onWindowResize } from './ThreeJsInit';
+	import { initializeThreeJSSceneFromModelURL, onWindowResize } from './ThreeJsInit';
 	import { onMouseDown, onMouseUp, onMouseDrag } from './ThreeJsEvents';
-	import { selectedUUID } from '$lib/stores';
+	import { selectedUUID } from '$stores/material';
 
+	/**URL to model, stored in environment and provided by page.svelte*/
 	export let modelURL: string;
 
 	let threeCanvas: HTMLCanvasElement;
 
 	if (browser && modelURL) {
-		onMount(() => {
-			init(threeCanvas, modelURL);
-			onWindowResize(threeCanvas);
-			animate();
-		});
+		onMount(() => initializeThreeJSSceneFromModelURL(threeCanvas, modelURL));
 	}
 </script>
 

@@ -1,5 +1,5 @@
-<script>
-	import { zoom } from '$lib/stores';
+<script lang="ts">
+	import { zoom } from '$stores/camera';
 	//TODO: Maybe put a span over the center of the screen to catch zoom scrolls, otherwise, the page should scroll
 	export let min = 0,
 		max = 100,
@@ -11,8 +11,6 @@
 		markerBorder = `2px solid #fff`,
 		backgroundColor = 'transparent',
 		trackColor = '#eaeaea';
-
-	const setZoom = (e) => zoom.setFromSlider(e?.target?.value);
 	$: left = `${$zoom}%`;
 </script>
 
@@ -35,7 +33,7 @@
 		{step}
 		aria-label="Zoom slider"
 		value={$zoom}
-		on:input={setZoom}
+		on:input={(e) => zoom.setFromValue(Number(e.currentTarget.value))}
 	/>
 	<div id="zoomMarker" class="zoomMarker" />
 </div>

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import Icon from '$lib/Icon/Icon.svelte';
 	export let isOpen = false;
 	$: icon = isOpen ? 'close' : 'play';

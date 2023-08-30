@@ -1,19 +1,21 @@
-<script>
-	import { glossiness, hsl } from '$lib/stores';
+<script lang="ts">
+	import type { HSLColor } from '$lib/colorFunctions';
+	import { glossiness, hsl } from '$stores/material';
 
 	export let max = 1,
 		min = 0,
 		step = 0.01;
 
+	//Binding to intermediate one-way value to prevent infinite loop
 	let value = $glossiness;
 
 	//CSS Variablss
-	let left,
-		height = 100,
-		color,
-		hslBackground;
+	let left: string,
+		height = '100',
+		color: string,
+		hslBackground: string;
 
-	const generateStyle = (glossiness, hsl) => {
+	const generateStyle = (glossiness: number, hsl: HSLColor) => {
 		const hue = hsl.h;
 		const leftPercent = glossiness * 100;
 		const minDisplay = 20;

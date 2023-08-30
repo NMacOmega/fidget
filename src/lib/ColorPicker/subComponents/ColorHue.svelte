@@ -1,5 +1,6 @@
-<script>
-	import { hsv } from '$lib/stores';
+<script lang="ts">
+	import type { HSVColor } from '$lib/colorFunctions';
+	import { hsv } from '$stores/material';
 
 	export let min = 0.0,
 		max = 360,
@@ -7,15 +8,15 @@
 
 	//CSS variables
 	let value = $hsv.h,
-		left,
-		flatColor;
+		left: string,
+		flatColor: string;
 
-	const generateStyle = (hsv) => {
+	const generateStyle = (hsv: HSVColor) => {
 		left = `${(hsv.h / max) * 100}%`;
 		flatColor = `hsl(${hsv.h}, 100%, 50%)`;
 	};
 
-	const updateValue = (newHue) => {
+	const updateValue = (newHue: number) => {
 		$hsv = { ...$hsv, h: newHue };
 		generateStyle($hsv);
 	};

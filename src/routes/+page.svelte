@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { PUBLIC_MODEL_URL } from '$env/static/public';
 	import ThreeJsScene from '$lib/ThreeJsScene/ThreeJsScene.svelte';
 	import Icon from '$lib/Icon/Icon.svelte';
-	import { camera } from '$lib/stores';
+	import { camera } from '$stores/camera';
 	import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
 	import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
-	import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
-	import { PUBLIC_MODEL_URL } from '$env/static/public';
+	// import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
+	import Test from '$lib/test/test.svelte';
 </script>
 
 <section class="firstSection">
@@ -20,13 +21,13 @@
 <section class="secondSection">
 	<div class="demo">
 		<ThreeJsScene modelURL={PUBLIC_MODEL_URL || ''} />
-		<button class="cameraButton prev" on:click={() => camera.prev()}
+		<button class="cameraButton prev" on:click={camera.prev}
 			><Icon class="fa-solid fa-angle-left" /></button
 		>
-		<button class="cameraButton next" on:click={() => camera.next()}
+		<button class="cameraButton next" on:click={camera.next}
 			><Icon class="fa-solid fa-angle-right" /></button
 		>
-		<ColorPicker />
+		<!-- <ColorPicker /> -->
 		<AnimationStartButton />
 		<ZoomSlider />
 	</div>
@@ -35,6 +36,8 @@
 <section class="thirdSection">
 	<h3 class="cta">Hope you enjoy these fidgets!</h3>
 </section>
+
+<Test />
 
 <style>
 	:global(body) {

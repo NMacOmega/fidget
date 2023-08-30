@@ -1,5 +1,5 @@
 <script>
-	import { hsl, hex, hsv, rgb } from '$lib/stores';
+	import { hsl, hex, hsv, rgb } from '$stores/material';
 	let activeOption = 'hsv';
 	let optionText = '';
 	const activeButtonColor = 'var(--color-bg-accent)';

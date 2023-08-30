@@ -31,6 +31,10 @@ const config = {
 		paths: {
 			base: dev ? '' : process.env.BASE_PATH
 			// base: process.env.NODE_ENV === 'production' ? '/fidget' : ''
+		},
+		alias: {
+			$stores: 'src/lib/stores',
+			$types: 'src/lib/types'
 		}
 	}
 };

@@ -1,15 +1,16 @@
-<script>
-	import { hsl, opacity } from '$lib/stores';
+<script lang="ts">
+	import type { HSLColor } from '$lib/colorFunctions';
+	import { hsl, opacity } from '$stores/material';
 
 	export let min = 0.0,
 		max = 1.0,
 		step = 0.0001;
 	let value = $opacity;
 	//CSS values
-	let left, baseColor, opacityColor;
+	let left: string, baseColor: string, opacityColor: string;
 
 	// //Maybe on lighter hues change the border to black?
-	const generateStyle = (hsl, opacity) => {
+	const generateStyle = (hsl: HSLColor, opacity: number) => {
 		let { h, s, l } = hsl;
 		s *= 100;
 		l *= 100;

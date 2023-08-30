@@ -1,60 +1,65 @@
-<script>
-	import { metalness } from '$lib/stores';
+<script lang="ts">
+	import { metalness } from '$stores/material';
 	export let max = 1;
 	export let min = 0;
 	export let step = 0.01;
 
 	let value = $metalness,
-		element;
+		element: HTMLElement;
 
 	//CSS Variables
-	let left, color, borderShape, markerShape, markerColor, markerBorder, hslBackground;
+	let a = 0,
+		b = 0,
+		c = 0,
+		d = 0,
+		stop = 0,
+		shade = 0,
+		left = 0;
 
-	const clamp = (num, max, min) => Math.min(max, Math.max(min, num));
+	const clamp = (num: number, max: number, min: number) => Math.min(max, Math.max(min, num));
 
-	const generateStyle = (metalness) => {
-		const leftPercent = metalness * 100 || 0;
-		left = `${leftPercent}%`;
-
-		const height = element?.offsetHeight || 0;
-		const width = element?.offsetWidth || 0;
+	const calcStyleValues = (metalness: number, width: number, height: number) => {
+		const left = metalness * 100 || 0;
 		const angle = Math.atan(height / width);
 
-		let a = metalness - 0.1;
-		let b = width * a * Math.tan(angle);
-		let c = metalness + 0.2;
-		let d = width * c * Math.tan(angle);
-		a = clamp(100 - a * 100, 100, -1);
-		b = clamp(110 - (b / height) * 100, 83, 1);
-		c = clamp(110 - c * 100, 75, 10);
-		d = clamp(100 - (d / height) * 100, 65, 0);
-
-		borderShape = `0% 100%, 0% ${a}%, 100% ${d}%, 100% 100%`;
-		markerShape = `5% 93%, 5% ${b}%, 93% ${c}%, 90% 93%`;
+		const a = metalness - 0.1;
+		const b = width * a * Math.tan(angle);
+		const c = metalness + 0.2;
+		const d = width * c * Math.tan(angle);
 
 		const stop = metalness * 100;
 		const shade = 100 - stop > 50 ? 100 : 0;
-		markerColor = `hsl(0, 0%, ${stop}%)`;
-		markerBorder = `hsl(1, 0%, ${shade}%)`;
-		hslBackground = `linear-gradient(90deg, 
-		hsl(1, 1%, 10%) 0%,  
-		hsl(1, 1%, 50%) ${stop}%,  
-		hsl(1, 1%, 90%) 100%,  
-		hsl(1, 1%, 90%) 100%)`;
+
+		return {
+			a: clamp(100 - a * 100, 100, -1),
+			b: clamp(110 - (b / height) * 100, 83, 1),
+			c: clamp(110 - c * 100, 75, 10),
+			d: clamp(100 - (d / height) * 100, 65, 0),
+			stop,
+			shade,
+			left
+		};
 	};
-	$: generateStyle($metalness);
-	$: $metalness = value;
+
+	$: ({ a, b, c, d, stop, shade, left } = calcStyleValues(
+		$metalness,
+		element?.offsetHeight || 0,
+		element?.offsetWidth || 0
+	));
 </script>
 
 <div
 	class="metalness"
-	style:--left={left}
-	style:--color={color}
-	style:--markerShape={markerShape}
-	style:--borderShape={borderShape}
-	style:--markerColor={markerColor}
-	style:--markerBorder={markerBorder}
-	style:--hsl-background={hslBackground}
+	style:--left={`${left}%`}
+	style:--markerShape={`5% 93%, 5% ${b}%, 93% ${c}%, 90% 93%`}
+	style:--borderShape={`0% 100%, 0% ${a}%, 100% ${d}%, 100% 100%`}
+	style:--markerColor={`hsl(0, 0%, ${stop}%)`}
+	style:--markerBorder={`hsl(1, 0%, ${shade}%)`}
+	style:--hsl-background={`linear-gradient(90deg, 
+							hsl(1, 1%, 10%) 0%,  
+							hsl(1, 1%, 50%) ${stop}%,  
+							hsl(1, 1%, 90%) 100%,  
+							hsl(1, 1%, 90%) 100%)`}
 >
 	<span class="metalnessSpan" id="metalnessSpan" />
 	<input

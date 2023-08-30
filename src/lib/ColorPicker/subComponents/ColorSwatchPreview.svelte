@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '$lib/Icon/Icon.svelte';
-
-	export let swatch,
+	//@todo fix swatch definition, move everything to d.ts files
+	export let swatch: Swatch,
 		isDeleteMode = false;
 
 	//CSS variables
@@ -23,7 +23,7 @@
 		glossyBG: ''
 	};
 
-	const updateStyle = (swatch) => {
+	const updateStyle = (swatch: Swatch) => {
 		const { h, s, l, m: metalness, g: glossiness, o: opacity } = swatch;
 		const dullS = s / 2;
 		const dullL = l / 2;
@@ -50,7 +50,7 @@
 		setInterval(() => (highlightClass = 'highlighted'), 200);
 	};
 
-	const updateDeleteColor = (h, isDeleteMode) => {
+	const updateDeleteColor = (h: number, isDeleteMode: boolean) => {
 		if (isDeleteMode) colors.delete = 300 >= h && h >= 10 ? 'red' : 'white';
 	};
 	$: updateStyle(swatch);

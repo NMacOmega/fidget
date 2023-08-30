@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ColorSwatchPreview from './ColorSwatchPreview.svelte';
-	import { hsl, opacity, metalness, glossiness } from '$lib/stores';
+	import { hsl, opacity, metalness, glossiness } from '$stores/material';
 	import Icon from '$lib/Icon/Icon.svelte';
 
 	interface Swatch {
@@ -76,7 +76,7 @@
 		const newSwatch = { h, s, l, m: $metalness, g: $glossiness, o: $opacity };
 
 		const i = findDuplicateIndex(swatches, newSwatch);
-		if (i >= 0) return elements[i]?.applyHighlight();
+		if (i && i >= 0) return elements[i]?.applyHighlight();
 		updateSwatchOrder([...swatches, newSwatch]);
 	};
 
