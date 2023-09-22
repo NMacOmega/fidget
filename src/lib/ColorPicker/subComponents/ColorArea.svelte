@@ -1,46 +1,74 @@
 <script lang="ts">
 	import { hsv, hex, selectedUUID } from '$stores/material';
-	let element: HTMLElement,
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+	let thisElement: HTMLElement,
 		isMouseCaptured = false;
 
 	//CSS Variables
 	let leftOffset = 0,
 		topOffset = 0;
+
+	/**
+	 * Utility function to clamp a number between the provieded max and min values
+	 * @param num will return this if it is min > num < max
+	 * @param max returns this if num is larger
+	 * @param min returns this if num is less
+	 * @returns min > num < max
+	 */
 	const clamp = (num: number, max: number, min: number) => Math.min(Math.max(num, min), max);
 
-	const updateOffset = (
+	/**
+	 * Moves the marker to x,y coordinates that match saturation and value from HSV.
+	 *
+	 * Clamps the values to allow some margin to run outside of it's border
+	 *
+	 * exported to enable triggering by parrent
+	 * @param _optionalTrigger used to trigger this action when a variable changes
+	 * @param s current HSV saturation, taken from HSV store by default
+	 * @param v current HSV value, taken from HSV store by default
+	 * @void updates the left and top properties of the marker element
+	 */
+	export const updateOffset = (
 		_optionalTrigger: typeof $selectedUUID | null,
 		s = $hsv.s,
-		v = 1 - $hsv.v
+		v = 100 - $hsv.v
 	) => {
-		s *= 100;
-		v *= 100;
 		leftOffset = clamp(s, 95.5, -6.5);
 		topOffset = clamp(v, 95.5, -6.5);
 	};
 
+	/**
+	 * When mouse click occurs, takes the location of the click relative to color area
+	 * and converts into HSV saturation and value parameters.
+	 *
+	 * Updates the HSV store with the results.
+	 * @param e the mouse click event
+	 * @shortcircuits-if
+	 * - global isMouseCaptures is false, and we are thus not listening for events on this element
+	 * - There is no detected colorArea element in the DOM to measure
+	 * @void updates HSV store with new S and V from marker location
+	 */
 	const updateSaturationAndValueOnClick = (
 		e: MouseEvent & {
 			currentTarget: (EventTarget & HTMLDivElement) | Window;
 		}
 	) => {
-		if (!isMouseCaptured || !element) return;
+		if (!isMouseCaptured || !thisElement) return;
 		const { clientX, clientY } = e;
-		const { top, left, width, height } = element.getBoundingClientRect();
+		const { top, left, width, height } = thisElement.getBoundingClientRect();
+		const leftPoint = ((clientX - left) / width) * 100;
+		const topPoint = ((clientY - top) / height) * 100;
 
-		const leftPoint = (clientX - left) / width;
-		const topPoint = (clientY - top) / height;
-
-		const s = clamp(leftPoint, 1, 0);
-		const v = clamp(1 - topPoint, 1, 0.0001);
+		const s = clamp(leftPoint, 100, 0.0001);
+		const v = clamp(100 - topPoint, 100, 0.0001);
 		updateOffset(null, leftPoint, topPoint);
-		$hsv = { h: $hsv.h, s, v };
+		dispatch('colorAreaChange', { value: { h: $hsv.h, s, v } });
 	};
-	$: updateOffset($selectedUUID);
 </script>
 
 <svelte:window
-	on:mousemove={(e) => updateSaturationAndValueOnClick(e)}
+	on:mousemove={updateSaturationAndValueOnClick}
 	on:mouseup={() => (isMouseCaptured = false)}
 />
 <div
@@ -53,7 +81,7 @@
 		isMouseCaptured = true;
 		updateSaturationAndValueOnClick(e);
 	}}
-	bind:this={element}
+	bind:this={thisElement}
 >
 	<div class="colorMarker" />
 </div>

@@ -1,7 +1,81 @@
 //@ts-check
 import { z } from 'zod';
 
-const rgbNumber = z.number().nonnegative().lte(255);
+/**
+ * Convenience function to confirm a number is between a max and min value
+ * @param {number} num
+ * @param {number} max
+ * @param {number} min
+ * @returns {boolean} true or false
+ */
+const isNumberBetween = (/**@type {unknown}*/ num, max, min) =>
+	typeof num === 'number' &&
+	typeof max === 'number' &&
+	typeof min === 'number' &&
+	min <= num &&
+	num <= max;
+
+/**
+ * For a series of [num, max, min] data sets,
+ * performs {@link isBetween} to see if values are correct.
+ *
+ * if any one of the sets does not match, the retured value is false
+ *
+ * if all sets pass, true is returned
+ *
+ * - a set must be in complete [num, max, min] order or false will be returned
+ * @param {[number, number, number][]} params a list of [num, max, min] sets of numbers
+ * @returns {boolean} TRUE if all provided sets are valid, FALSE if at least one entry fails
+ * @example const isValidBool = isEachNumberBetween([[50, 100, 2], [10, 11, -10], [2.99, 3, 1]]); //true
+ * @example const notValid = isEachNumberBetween([[20, 30, 40],[50, 0, 100]]); //false (must be [num, max, min])
+ * @example const notValid = isEachNumberBetween([50, 100, 0], [20, 100]); //false (must have 3 numbers)
+ * @example const notValid = isEachNumberBetween([[50,60], 100, 0]); //false (must be [#,#,#])
+ * @example const notValid = isEachNumberBetween(["50", "100", "0"]); //false (must be numbers only)
+ */
+const isEachNumberBetween = (params) => {
+	for (var i = 0; i < params.length; i++) {
+		let [num = 0, max = -1, min = 1] = params[i];
+		if (!isNumberBetween(num, max, min)) return false;
+	}
+	return true;
+};
+
+/**
+ * Attempts to exract a property from an object. Returns the first value to succeed
+ * @param {*} obj an object to check against properties
+ * @param {string[]} tags array of lowercase properties to check against
+ *
+ * each object key will be converted to lower case for testing
+ * @param {(v:any)=>boolean} isValidValue Optional function to test if the value meets provided parameters. Defaults to true if not provided
+ *
+ * if testing function not provided, test will return the first value that exists
+ *
+ * @returns {*} The first value to be found and vaidated. The rest are ignored
+ */
+const extractPropertyFromObject = (obj, tags, isValidValue = () => true) => {
+	for (const [key, prop] of Object.entries(obj)) {
+		const isValidKey = tags.indexOf(key.toLowerCase()) > -1;
+		if (isValidKey && isValidValue(prop)) return prop;
+	}
+};
+
+/**
+ * For a string value, returns all of the decimal numbers found in the string as an array
+ *
+ * Number patterns include:
+ * - 123
+ * - 1.23
+ * - .123
+ * @param {*} str
+ * @returns {number[]}
+ * @example res = numbersFromString("here 1 are 2.2 some .3 n4mbers5 .6") // [1, 2.2, 0.3, 4, 5, 0.6]
+ */
+const numbersFromString = (/**@type {string}*/ str) =>
+	str.match(/\d+\.\d+|\.\d+|\d+/g)?.map((v) => +v) || [];
+
+//ZOD PRIMITIVES AND STRUCTURES
+
+const rgbNumber = z.number().gte(0).lte(255);
 /**Positive Number Between 0 and 255 @typedef {z.infer<rgbNumber>} rgbNumberType*/
 
 const percentNumber = z.number().nonnegative().lte(100);
@@ -41,7 +115,12 @@ const rgbSchema = z.object({
  *  See: {@link RGBColor}, {@link rgbNumber}
  * @typedef {z.infer<rgbTupleSchema>} RGBTupleColor
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const rgbTupleSchema = z.tuple([rgbNumber, rgbNumber, rgbNumber]);
+/**
+ * Strings can be parsed so long as three valid rgb values can be parsed out
+ * @typedef {string} RGBString
+ */
 
 /**
  * Hue, Saturation, and Luminosity.
@@ -69,7 +148,13 @@ const hslSchema = z.object({
  * See: {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
  * @typedef {z.infer<hslTupleSchema>} HSLTupleColor
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const hslTupleSchema = z.tuple([hueNumber, percentNumber, percentNumber]);
+
+/**
+ * Strings can be parsed so long as three valid rgb values can be parsed out
+ * @typedef {string} HSLString
+ */
 
 /**
  * Hue, Saturation, and Value.
@@ -98,7 +183,13 @@ const hsvSchema = z.object({
  * See {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}
  * @typedef {z.infer<hsvTupleSchema>} HSVTupleColor
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const hsvTupleSchema = z.tuple([hueNumber, percentNumber, percentNumber]);
+
+/**
+ * Strings can be parsed so long as three valid rgb values can be parsed out
+ * @typedef {string} HSVString
+ */
 
 /**
  * A Color Represented in the following values:
@@ -132,7 +223,7 @@ export const convert = {
 		 * 
 		 * FORMAT: {r, g, b} or [r, g, b]
 		 * 
-		 * @param {RGBColor | RGBTupleColor} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
+		 * @param {RGBColor | RGBTupleColor | RGBString} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
 		 * @returns {HSLColor | undefined} {h, s, l}, or undefined if failed. See {@link HSLColor}  
 		 * @see {@link convert.rgb.hsl} 
 		 * */
@@ -144,7 +235,7 @@ export const convert = {
 		 * 
 		 * FORMAT: {r, g, b} or [r, g, b]
 		 * 
-		 * @param {RGBColor | RGBTupleColor} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
+		 * @param {RGBColor | RGBTupleColor | RGBString} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
 		 * @returns {HSVColor | undefined} {h, s, v}, or undefined if failed. See {@link HSVColor}  
 		 * @see {@link convert.rgb.hsv} 
 		 * */
@@ -156,7 +247,7 @@ export const convert = {
 		 * 
 		 * FORMAT: {r, g, b} or [r, g, b]
 		 * 
-		 * @param {RGBColor | RGBTupleColor} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
+		 * @param {RGBColor | RGBTupleColor | RGBString} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
 		 * @returns {HEXColor | undefined} A HEX String, or undefined if failed. See {@link HEXColor}  
 		 * @see {@link convert.rgb.hex} 
 		 * */
@@ -168,7 +259,7 @@ export const convert = {
 		 * 
 		 * FORMAT: {r, g, b} or [r, g, b]
 		 * 
-		 * @param {RGBColor | RGBTupleColor} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
+		 * @param {RGBColor | RGBTupleColor | RGBString} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
 		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
 		 * @see {@link convert.rgb.toColor} 
 		 * */
@@ -183,7 +274,7 @@ export const convert = {
 		 * - l = 0 <=> 100
 		 * - FORMAT: {h, s, l} or [h, s, l]
 		 * 
-		 * @param {HSLColor | HSLTupleColor} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
+		 * @param {HSLColor | HSLTupleColor | HSLString} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
 		 * @returns {RGBColor | undefined} {r, g, b}, or undefined if failed. See {@link RGBColor}  
 		 * @see {@link convert.hsl.rgb} 
 		 * */
@@ -196,7 +287,7 @@ export const convert = {
 		 * - l = 0 <=> 100
 		 * - FORMAT: {h, s, l} or [h, s, l]
 		 * 
-		 * @param {HSLColor | HSLTupleColor} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
+		 * @param {HSLColor | HSLTupleColor | HSLString} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
 		 * @returns {HSVColor | undefined} {h, s, v}, or undefined if failed. See {@link HSVColor}  
 		 * @see {@link convert.hsl.hsv} 
 		 * */
@@ -209,7 +300,7 @@ export const convert = {
 		 * - l = 0 <=> 100
 		 * - FORMAT: {h, s, l} or [h, s, l]
 		 * 
-		 * @param {HSLColor | HSLTupleColor} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
+		 * @param {HSLColor | HSLTupleColor | HSLString} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
 		 * @returns {HEXColor | undefined} A HEX String, or undefined if failed. See {@link HEXColor}  
 		 * @see {@link convert.hsl.hex} 
 		 * */
@@ -222,7 +313,7 @@ export const convert = {
 		 * - l = 0 <=> 100
 		 * - FORMAT: {h, s, l} or [h, s, l]
 		 * 
-		 * @param {HSLColor | HSLTupleColor} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
+		 * @param {HSLColor | HSLTupleColor | HSLString} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
 		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
 		 * @see {@link convert.hsl.toColor} 
 		 * */
@@ -237,7 +328,7 @@ export const convert = {
 		 * - v = 0 <=> 100
 		 * - FORMAT: {h, s, v} or [h, s, v]
 		 * 
-		 * @param {HSVColor | HSVTupleColor} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}
+		 * @param {HSVColor | HSVTupleColor | HSVString} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}
 		 * @returns {RGBColor | undefined} {r, g, b}, or undefined if failed. See {@link RGBColor}  
 		 * @see {@link convert.hsv.rgb} 
 		 * */
@@ -250,7 +341,7 @@ export const convert = {
 		 * - v = 0 <=> 100
 		 * - FORMAT: {h, s, v} or [h, s, v]
 		 * 
-		 * @param {HSVColor | HSVTupleColor} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}
+		 * @param {HSVColor | HSVTupleColor | HSVString} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}
 		 * @returns {HSLColor | undefined} {h, s, l}, or undefined if failed. See {@link HSLColor}  
 		 * @see {@link convert.hsv.hsl} 
 		 * */
@@ -263,7 +354,7 @@ export const convert = {
 		 * - v = 0 <=> 100
 		 * - FORMAT: {h, s, v} or [h, s, v]
 		 * 
-		 * @param {HSVColor | HSVTupleColor} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}		 * @returns {HEXColor | undefined} A HEX String, or undefined if failed. See {@link HEXColor}  
+		 * @param {HSVColor | HSVTupleColor | HSVString} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}		 * @returns {HEXColor | undefined} A HEX String, or undefined if failed. See {@link HEXColor}  
 		 * @see {@link convert.hsv.hex} 
 		 * */
 		hex: (val) => parseAndConvert(val, hsvSchema, hexSchema, [HSVtoRGB, RGBtoHEX], castToHSV),
@@ -275,7 +366,7 @@ export const convert = {
 		 * - v = 0 <=> 100
 		 * - FORMAT: {h, s, v} or [h, s, v]
 		 * 
-		 * @param {HSVColor | HSVTupleColor} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
+		 * @param {HSVColor | HSVTupleColor | HSVString} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
 		 * @see {@link convert.hsv.toColor} 
 		 * */
 		toColor: (val) => parseAndConvert(val, hsvSchema, colorSchema, [valueToColorObject], castToHSV),
@@ -348,19 +439,19 @@ export const convert = {
  * @returns {TResult | undefined} The Parsed color or the converted color (if Conversion functions provided) or undefined if failed
  */
 function parseAndConvert(val, schema, _targetSchema, conversionFunctions, optionalPreprocessor) {
-	console.log(' Parsing: ', val);
 	const parse = optionalPreprocessor ? optionalPreprocessor.safeParse(val) : schema.safeParse(val);
 	if (parse.success) {
-		//@ts-expect-error
-		//@TODO: Need to find out how to cast to tresult correctly or limit to just the color options instead of complete generic
-		const result = /**@type {TResult}*/ (
-			!conversionFunctions
-				? parse.data
-				: conversionFunctions.reduce((acc, conversion) => {
+		//Casting hack used because JSDoc cannot infer generic return types
+		const result = /**@type {unknown}*/ (
+			conversionFunctions
+				? conversionFunctions.reduce((acc, conversion) => {
 						return conversion(acc);
 				  }, parse.data)
+				: //Just the parse data if no conversions included
+				  parse.data
 		);
-		return result;
+		//Casting because we know our library code results will match the generic we have provided
+		return /**@type {TResult}*/ (result);
 	}
 	console.log(parse.error);
 }
@@ -404,6 +495,115 @@ function valueToColorObject(value) {
 	throw new Error('Invalid input to make a color object. input must be parsed first');
 }
 
+//////////////////////////////////////////////////////////////
+/* PREPROCESSORS */
+
+/**
+ * Converts an unknown value into [number, number, number] if possible
+ *
+ * Acceptable values are:
+ * - number[] with at least 3 entries
+ * - string with 3 number values inside
+ * - object with keys that match provided tags for each value
+ * - All values must be min <= val <= max
+ * - If any of the three values cannot be processed, returns undefined
+ * @param {unknown} val
+ * @param {[string[], number, number]} aParams tags, max, min
+ * @param {[string[], number, number]} bParams tags, max, min
+ * @param {[string[], number, number]} cParams tags, max, min
+ * @returns {[number, number, number] | undefined } returns the trivalue if possible
+ * @example trifromArray = extractTriValue([1,2,3,4,5], [["a"], 0,10,], [["b"], 0,10,], [["c"], 0,10,]) // [1, 2, 3]
+ * @example triFromString =  extractTriValue("He1re are so2me num3.0bers!", [["a"], 0,10,], [["b"], 0,10,], [["c"], 0,10,]) // [1, 2, 3]
+ * @example triFromObject = extractTriValue({alpha: 1, beta:2, c:3}, [["a", alpha], 0,10,], [["b", "beta"], 0,10,], [["c", "charlie"], 0,10,]) //
+ */
+function extractTriValue(val, [aTags, aMax, aMin], [bTags, bMax, bMin], [cTags, cMax, cMin]) {
+	/**@type {number} */ let a;
+	/**@type {number} */ let b;
+	/**@type {number} */ let c;
+
+	//"abc[number]def[number]ghi[number]" is permitted with regex conversion to array
+	if (typeof val === 'string') val = numbersFromString(val);
+
+	//[a, b, c] is permitted
+	if (Array.isArray(val) && val.length >= 3) {
+		[a, b, c] = val;
+		if (
+			isNumberBetween(a, aMax, aMin) &&
+			isNumberBetween(b, bMax, bMin) &&
+			isNumberBetween(c, cMax, cMin)
+		)
+			return [a, b, c];
+	}
+	//{a, b, c } is permitted by looking up acceptable tags and parsing
+	else if (typeof val === 'object' && val !== null) {
+		a = extractPropertyFromObject(val, aTags, (v) => isNumberBetween(v, aMax, aMin));
+		b = extractPropertyFromObject(val, bTags, (v) => isNumberBetween(v, bMax, bMin));
+		c = extractPropertyFromObject(val, cTags, (v) => isNumberBetween(v, cMax, cMin));
+		if (a && b && c) return [a, b, c];
+	}
+}
+
+/**
+ * Casts val to {H, S, L} Object before parsing against HSL Schema
+ * - h must be 0 <= h <= 360
+ * - s and l must be 0 <= n <= 160
+ * - returns undefined if requirements not met
+ * @param {unknown} unknownValue string, object, or array with h, s, l values
+ * @returns {HSLColor | undefined} The {@link HSLColor} or undefined if failed
+ */
+function preprocessHSL(unknownValue) {
+	const values = extractTriValue(
+		unknownValue,
+		[['h', 'hue'], 360, 0],
+		[['s', 'saturation'], 100, 0],
+		[['l', 'luminosity'], 100, 0]
+	);
+
+	if (values && values.length >= 3) {
+		const [h, s, l] = values;
+		return { h, s, l };
+	}
+}
+
+/**
+ * Casts val to {H, S, V} Object before parsing against HSV Schema
+ * - if not possible, returns undefined
+ * @param {unknown} unknownValue An unknown value, presumed to be an array of numbers
+ * @returns {HSVColor | undefined} The HSV result Array or undefined if failed
+ */
+function preprocessHSV(unknownValue) {
+	const values = extractTriValue(
+		unknownValue,
+		[['h', 'hue'], 360, 0],
+		[['s', 'saturation'], 100, 0],
+		[['v', 'value'], 100, 0]
+	);
+
+	if (values && values.length >= 3) {
+		const [h, s, v] = values;
+		return { h, s, v };
+	}
+}
+/**
+ * Casts val to {R, G, B} Object before parsing against RGB Schema
+ * - if not possible, returns undefined
+ * @param {unknown} unknownValue An unknown value, presumed to be an array of numbers
+ * @returns {RGBColor | undefined} The RGB result Array or undefined if failed
+ */
+function preprocessRGB(unknownValue) {
+	const values = extractTriValue(
+		unknownValue,
+		[['r', 'red'], 255, 0],
+		[['g', 'green'], 255, 0],
+		[['b', 'blue'], 255, 0]
+	);
+
+	if (values && values.length >= 3) {
+		const [r, g, b] = values;
+		return { r, g, b };
+	}
+}
+
 /**
  * Casts val to Hexadecimal string before parsing against the HEX schema
  * - if not possible, returns undefined
@@ -411,41 +611,12 @@ function valueToColorObject(value) {
  * @returns {HEXColor | undefined} The Hexadecimal result string or undefined if failed
  */
 function preprocessHex(val) {
+	//@ts-expect-error nullish cases handled by default empty strings
 	let str = val.toString() || '';
-	str = str.match(/[\dA-Fa-f]/g).join('') || '';
+	str = str.match(/[\dA-Fa-f]/g)?.join('') || '';
 	if (str.length > 6) str = str.substring(0, 5);
 	if (str.length === 3) str = `${str}${str}`;
-	if (str.length > 0) return str;
-}
-/**
- * Casts val to {H, S, L} Object before parsing against HSL Schema
- * - if not possible, returns undefined
- * @param {unknown} val An unknown value, presumed to be an array of numbers
- * @returns {HSLColor | undefined} The HSL result Array or undefined if failed
- */
-function preprocessHSL(val) {
-	const { h, s, l } = val;
-	return { h, s, l };
-}
-/**
- * Casts val to {H, S, V} Object before parsing against HSV Schema
- * - if not possible, returns undefined
- * @param {unknown} val An unknown value, presumed to be an array of numbers
- * @returns {HSVColor | undefined} The HSV result Array or undefined if failed
- */
-function preprocessHSV(val) {
-	const { h, s, v } = val;
-	return { h, s, v };
-}
-/**
- * Casts val to {R, G, B} Object before parsing against RGB Schema
- * - if not possible, returns undefined
- * @param {unknown} val An unknown value, presumed to be an array of numbers
- * @returns {RGBColor | undefined} The RGB result Array or undefined if failed
- */
-function preprocessRGB(val) {
-	const { r, g, b } = val;
-	return { r, g, b };
+	if (str.length === 6) return str;
 }
 
 //////////////////////////////////////////////////////////////
@@ -487,8 +658,8 @@ function RGBtoHSV(rgb) {
 
 	hue = Math.floor(hue * 60);
 	const h = hue < 0 ? hue + 360 : hue;
-	const s = parseFloat(saturation.toFixed(3));
-	const v = parseFloat(value.toFixed(3));
+	const s = parseFloat((saturation * 100).toFixed(3));
+	const v = parseFloat((value * 100).toFixed(3));
 	return { h, s, v };
 }
 
@@ -500,10 +671,14 @@ function RGBtoHSV(rgb) {
  * See {@link HSLColor}, {@link HSVColor}
  */
 function HSLtoHSV(hsl) {
-	const { h, s, l } = hsl;
-	const value = l + s * Math.min(l, 1 - l);
-	const saturation = value === 0 ? 0 : 2 * (1 - l / value);
-	return { h, s: saturation, v: value };
+	let { s, l } = hsl;
+	l /= 100;
+	s /= 100;
+	let value = l + s * Math.min(l, 1 - l);
+	let saturation = value === 0 ? 0 : 2 * (1 - l / value);
+	value *= 100;
+	saturation *= 100;
+	return { h: hsl.h, s: saturation, v: value };
 }
 
 /**
@@ -515,8 +690,8 @@ function HSLtoHSV(hsl) {
  */
 function HSVtoRGB(hsv) {
 	const { h, s, v } = hsv;
-	const saturation = s;
-	const value = v;
+	const saturation = s / 100;
+	const value = v / 100;
 	const hueBy60 = h / 60;
 	let chroma = saturation * value;
 	let x = chroma * (1 - Math.abs((hueBy60 % 2) - 1));
@@ -544,12 +719,14 @@ function HSVtoRGB(hsv) {
  * See {@link HSVColor}, {@link HSLColor}
  */
 function HSVtoHSL(hsv) {
-	const { h, s, v } = hsv;
+	let { s, v } = hsv;
+	s /= 100;
+	v /= 100;
 	let lightness = Math.min(1, Math.max(0, v * (1 - s / 2)));
-	let saturation = (v - lightness) / Math.min(lightness, 1 - lightness);
-	lightness = parseFloat(lightness.toFixed(3));
-	saturation = parseFloat(saturation.toFixed(3));
-	return { h, s: saturation, l: lightness };
+	let saturation = (v - lightness) / Math.min(lightness, 1 - lightness) || 0;
+	lightness = parseFloat((lightness * 100).toFixed(3));
+	saturation = parseFloat((saturation * 100).toFixed(3));
+	return { h: hsv.h, s: saturation, l: lightness };
 }
 
 /**

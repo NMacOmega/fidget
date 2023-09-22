@@ -2,69 +2,112 @@
 	import ColorArea from './subComponents/ColorArea.svelte';
 	import ColorAlpha from './subComponents/ColorAlpha.svelte';
 	import ColorHue from './subComponents/ColorHue.svelte';
-	import ColorPulloutButton from './subComponents/ColorPulloutButton.svelte';
 	import MetalnessSlider from '$lib/MetalnessSlider/MetalnessSlider.svelte';
 	import RoughnessSlider from '$lib/RoughnessSlider/RoughnessSlider.svelte';
-	import ColorOpenSecondaryButton from './subComponents/ColorOpenSecondaryButton.svelte';
+	import OpenMenuBtn from './subComponents/OpenMenuBtn.svelte';
+	import OpenSubmenuBtn from './subComponents/OpenSubmenuBtn.svelte';
 	import ColorInput from './subComponents/ColorInput.svelte';
 	import ColorSwatches from './subComponents/ColorSwatches.svelte';
+	import { hsv, selectedUUID } from '$stores/material';
+	import type { HSVColor } from '$lib/colorFunctions';
+	import type { SvelteComponent } from 'svelte';
 
+	//used to track if menus are open or not
 	let isMenuOpen = false,
 		isSecondaryMenuOpen = false;
 
+	/**Used to update the hue slider*/
+	let hueInput = $hsv.h;
+
+	// we will bind these components to call their child functions as needed
+	let colorArea: SvelteComponent | null = null;
+	let colorTextInput: SvelteComponent | null = null;
+
+	/**
+	 * Toggles the primary menu. If the primary menu is closing,
+	 * the secondary menu will also be closed.
+	 * @void toggles primary and secondary booleans
+	 */
 	const onMenuToggle = () => {
 		if (isMenuOpen) isSecondaryMenuOpen = false;
 		isMenuOpen = !isMenuOpen;
 	};
 
-	// Nice Idea Functions
+	/**
+	 * Runs on dispatch [hueChange]
+	 *
+	 * triggers the ColorText component to update it's text based one the current store value.
+	 * @void triggers ColorInput.setOption
+	 */
+	const onHueChange = (hue: number) => {
+		hsv.setHue(hue);
+		colorTextInput?.update();
+	};
 
-	// /**
-	//  * Update the color marker's accessibility label.
-	//  * @param {number} saturation
-	//  * @param {number} value
-	//  */
-	// function updateMarkerA11yLabel(saturation, value) {
-	// 	let label = settings.a11y.marker;
+	/**
+	 * Runs on dispatch [colorAreaChange]
+	 *
+	 * Sets the hsv store value and triggers an update on Color text so it will show updated input.
+	 * @param {HSVColor} hsvValue an HSVColor value
+	 * @void sets hsv store and triggers ColorText update function
+	 */
+	const onColorAreaChange = (hsvValue: HSVColor) => {
+		hsv.set(hsvValue);
+		colorTextInput?.update();
+	};
 
-	// 	saturation = saturation.toFixed(1) * 1;
-	// 	value = value.toFixed(1) * 1;
-	// 	label = label.replace('{s}', saturation);
-	// 	label = label.replace('{v}', value);
-	// 	colorMarker.setAttribute('aria-label', label);
-	// }
+	/**
+	 * Runs on dispatch [textChange]
+	 *
+	 * - triggers color area to update it's marker offset based on the current saturation and value of hsv store
+	 * - triggers hueInput to match the current hsv/hsl hue value
+	 * @void updates marker offset in ColorArea and value in Hue Slider
+	 */
+	const onTextInputChange = () => {
+		colorArea?.updateOffset(null, $hsv.s, $hsv.v);
+		hueInput = $hsv.h;
+	};
 
-	// /**
-	//  * Move the color marker when the arrow keys are pressed.
-	//  * @param {number} offsetX The horizontal amount to move.
-	//  * @param {number} offsetY The vertical amount to move.
-	//  */
-	// function moveMarkerOnKeydown(offsetX, offsetY) {
-	// 	let x = colorMarker.style.left.replace('px', '') * 1 + offsetX;
-	// 	let y = colorMarker.style.top.replace('px', '') * 1 + offsetY;
+	/**
+	 * Runs when selectedUUID changes
+	 *
+	 * triggers updates on these components to reflect current object material:
+	 * - ColorArea
+	 * - ColorTextInput
+	 * - HueSlider
+	 * @param _trigger the current uuid of selected object
+	 * @void updates Components to match current store values
+	 */
+	function onMaterialChange(_trigger: typeof $selectedUUID) {
+		colorTextInput?.update();
+		colorArea?.updateOffset();
+		hueInput = $hsv.h;
+	}
 
-	// 	setMarkerPosition(x, y);
-	// }
+	$: onMaterialChange($selectedUUID);
 </script>
 
 <div class={`colorPicker ${isMenuOpen ? 'open' : ''}`}>
-	<ColorPulloutButton isOpen={isMenuOpen} on:click={onMenuToggle} />
+	<OpenMenuBtn isOpen={isMenuOpen} on:click={onMenuToggle} />
 	<div class="colorPickerSubMenu">
 		<div class={`colorPickerSub ${isSecondaryMenuOpen ? 'open' : ''}`}>
 			<div class="colorPickerSubContent">
-				<ColorInput />
+				<ColorInput on:textChange={onTextInputChange} bind:this={colorTextInput} />
 				<ColorSwatches />
 			</div>
 		</div>
 	</div>
 	<span class="colorPickerBackground" />
 	<div class="colorPickerContent">
-		<ColorArea />
-		<ColorHue />
+		<ColorArea
+			on:colorAreaChange={(e) => onColorAreaChange(e?.detail?.value)}
+			bind:this={colorArea}
+		/>
+		<ColorHue value={hueInput} on:hueChange={(e) => onHueChange(e?.detail?.value)} />
 		<ColorAlpha />
 		<MetalnessSlider />
 		<RoughnessSlider />
-		<ColorOpenSecondaryButton
+		<OpenSubmenuBtn
 			isOpen={isSecondaryMenuOpen}
 			on:click={() => (isSecondaryMenuOpen = !isSecondaryMenuOpen)}
 		/>

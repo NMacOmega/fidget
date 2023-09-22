@@ -1,33 +1,29 @@
 <script lang="ts">
-	import type { HSLColor } from '$lib/colorFunctions';
-	import { hsl, opacity } from '$stores/material';
+	import { hsl, opacity, selectedUUID } from '$stores/material';
 
 	export let min = 0.0,
-		max = 1.0,
-		step = 0.0001;
-	let value = $opacity;
+		max = 100,
+		step = 0.1;
+
 	//CSS values
-	let left: string, baseColor: string, opacityColor: string;
+	let value = $opacity || 0;
+	let h = 0,
+		s = 0,
+		l = 0;
+	//@TODO: Maybe on lighter hues change the border to black?
 
-	// //Maybe on lighter hues change the border to black?
-	const generateStyle = (hsl: HSLColor, opacity: number) => {
-		let { h, s, l } = hsl;
-		s *= 100;
-		l *= 100;
-		left = `${(opacity / max) * 100}%`;
-		baseColor = `hsl(${h},${s}%,${l}%)`;
-		opacityColor = `hsla(${h}, ${s}%, ${l}%, ${opacity})`;
-	};
+	const onMaterialChange = (_trigger: typeof $selectedUUID) => (value = $opacity);
+	const onInput = (str: string) => opacity.set(Number(str));
 
-	$: generateStyle($hsl, $opacity);
-	$: $opacity = value;
+	$: onMaterialChange($selectedUUID);
+	$: ({ h, s, l } = $hsl);
 </script>
 
 <div
 	class="colorAlpha"
-	style:--left={left}
-	style:--color={baseColor}
-	style:--opacity-color={opacityColor}
+	style:--left={`${$opacity}%`}
+	style:--color={`hsl(${h},${100}%,${50}%)`}
+	style:--opacity-color={`hsla(${h}, ${s}%, ${l}%, ${opacity})`}
 >
 	<input
 		id="colorAlphaSlider"
@@ -39,6 +35,7 @@
 		{step}
 		aria-label="Alpha slider"
 		bind:value
+		on:input={(e) => onInput(e.currentTarget.value)}
 	/>
 	<div id="colorAlpaMarker" class="colorAlphaMarker" />
 	<span class="colorAlphaSpan" id="colorAlphaSpan" />

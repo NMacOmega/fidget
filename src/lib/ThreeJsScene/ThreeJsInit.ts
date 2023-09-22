@@ -7,7 +7,7 @@
     import { sceneObjects, canvas, scene as sceneStore, sceneHighlights, highlightFidget, interactions} from '$stores/material';
     import { camera as cameraStore, orbit as orbitStore, zoom as zoomStore } from '$stores/camera';
     import { animations } from '$stores/animation';
-    import type { SceneObjects, SceneHighlights} from '$stores/material';
+    import type { SceneObjects, SceneHighlights} from '$types';
     
     //These global variables store theeJS elements needed across intialization, render, and animate
     let threeScene: THREE.Scene;

@@ -1,46 +1,43 @@
 <script lang="ts">
-	import type { HSLColor } from '$lib/colorFunctions';
-	import { glossiness, hsl } from '$stores/material';
+	import { glossiness, hsl, selectedUUID } from '$stores/material';
 
-	export let max = 1,
-		min = 0,
-		step = 0.01;
-
-	//Binding to intermediate one-way value to prevent infinite loop
-	let value = $glossiness;
-
-	//CSS Variablss
-	let left: string,
-		height = '100',
-		color: string,
-		hslBackground: string;
-
-	const generateStyle = (glossiness: number, hsl: HSLColor) => {
-		const hue = hsl.h;
-		const leftPercent = glossiness * 100;
-		const minDisplay = 20;
-		const heightPercent = leftPercent < minDisplay ? minDisplay : leftPercent;
-		left = `${leftPercent}%`;
-		height = `${heightPercent}%`;
-
-		color = `hsl(${hue}, 100%, 60%)`;
-		hslBackground = `linear-gradient(90deg, 
-		hsl(${hue}, 1%, 90%) 0%,  
-		hsl(${hue}, 40%, 50%) ${leftPercent}%,  
-		hsl(${hue}, 100%, 50%) 100%,  
-		hsl(${hue}, 100%, 50%) 100%)`;
+	type EventWithVal = Event & {
+		currentTarget: EventTarget & HTMLInputElement;
 	};
 
-	$: generateStyle($glossiness, $hsl);
-	$: $glossiness = value <= 0 ? 0.0001 : value;
+	export let max = 100,
+		min = 0,
+		step = 0.1;
+
+	//Binding to intermediate one-way value to prevent infinite loop
+	let value = $glossiness || 0;
+	/**Minimum height of the marker in percent*/
+	const minDisplay = 20;
+
+	//CSS Variabls
+	/**How tall to make the leading edge of the slider*/
+	let height = 100;
+
+	const onMaterialChange = (_trigger: typeof $selectedUUID) => (value = $glossiness);
+	const onInput = (e: EventWithVal) => {
+		const val = Number(e.currentTarget.value);
+		glossiness.set(val <= 0 ? 0.0001 : val);
+	};
+
+	$: onMaterialChange($selectedUUID);
+	$: height = value < minDisplay ? minDisplay : value;
 </script>
 
 <div
 	class="roughness"
-	style:--left={left}
-	style:--height={height}
-	style:--color={color}
-	style:--hsl-color={hslBackground}
+	style:--left={`${value}%`}
+	style:--height={`${height}%`}
+	style:--color={`hsl(${$hsl.h}, 100%, 60%)`}
+	style:--hsl-color={`linear-gradient(90deg, 
+						hsl(${$hsl.h}, 1%, 90%) 0%,  
+						hsl(${$hsl.h}, 40%, 50%) ${value}%,  
+						hsl(${$hsl.h}, 100%, 50%) 100%,  
+						hsl(${$hsl.h}, 100%, 50%) 100%)`}
 >
 	<span class="roughnessSpan" id="roughnessSpan" />
 	<input
@@ -53,6 +50,7 @@
 		{step}
 		aria-label="roughness slider"
 		bind:value
+		on:input={onInput}
 	/>
 	<div id="roughnessMarker" class="roughnessMarker" />
 </div>

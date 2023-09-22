@@ -1,56 +1,65 @@
 <script lang="ts">
-	import { metalness } from '$stores/material';
-	export let max = 1;
-	export let min = 0;
-	export let step = 0.01;
+	import { metalness, selectedUUID } from '$stores/material';
 
-	let value = $metalness,
-		element: HTMLElement;
-
-	//CSS Variables
-	let a = 0,
-		b = 0,
-		c = 0,
-		d = 0,
-		stop = 0,
-		shade = 0,
-		left = 0;
-
-	const clamp = (num: number, max: number, min: number) => Math.min(max, Math.max(min, num));
-
-	const calcStyleValues = (metalness: number, width: number, height: number) => {
-		const left = metalness * 100 || 0;
-		const angle = Math.atan(height / width);
-
-		const a = metalness - 0.1;
-		const b = width * a * Math.tan(angle);
-		const c = metalness + 0.2;
-		const d = width * c * Math.tan(angle);
-
-		const stop = metalness * 100;
-		const shade = 100 - stop > 50 ? 100 : 0;
-
-		return {
-			a: clamp(100 - a * 100, 100, -1),
-			b: clamp(110 - (b / height) * 100, 83, 1),
-			c: clamp(110 - c * 100, 75, 10),
-			d: clamp(100 - (d / height) * 100, 65, 0),
-			stop,
-			shade,
-			left
-		};
+	type EventWithVal = Event & {
+		currentTarget: EventTarget & HTMLInputElement;
 	};
 
-	$: ({ a, b, c, d, stop, shade, left } = calcStyleValues(
-		$metalness,
-		element?.offsetHeight || 0,
-		element?.offsetWidth || 0
-	));
+	export let max = 100;
+	export let min = 0;
+	export let step = 0.1;
+
+	let value = $metalness || 0;
+	/**Height of this bar*/
+	let height = 0;
+	/**Width of this bar*/
+	let width = 0;
+
+	//CSS Variables
+	/**The top point of the border leading edge*/
+	let a = 0;
+	/**The top point of the marker leading edge*/
+	let b = 0;
+	/**The bottom point of the marker leading edge*/
+	let c = 0;
+	/**The bottom point of the border leading edge*/
+	let d = 0;
+	/** stopping point for marker gradient*/
+	let stop = 0;
+	/** stopping point for border gradient*/
+	let shade = 0;
+
+	/** Clamps provided number between max and min values*/
+	const clamp = (num: number, max: number, min: number) => Math.min(max, Math.max(min, num));
+
+	/**For some reason I cannot calculate these reactively or compress the calculateions. My head hurts
+	 * @void updates the 4 points used for the marker shape
+	 */
+	const generateStyle = (metalness: number) => {
+		const angle = Math.atan(height / width);
+		a = metalness - 0.1;
+		b = width * a * Math.tan(angle);
+		c = metalness + 0.2;
+		d = width * c * Math.tan(angle);
+		a = clamp(100 - a, 100, -1);
+		b = clamp(110 - b / height, 83, 1);
+		c = clamp(110 - c, 75, 10);
+		d = clamp(100 - d / height, 65, 0);
+	};
+
+	const onMaterialChange = (_trigger: typeof $selectedUUID) => (value = $metalness);
+	const onInput = (e: EventWithVal) => metalness.set(Number(e.currentTarget.value));
+
+	$: onMaterialChange($selectedUUID);
+
+	$: stop = value;
+	$: shade = 100 - stop > 50 ? 100 : 0;
+	$: generateStyle(value);
 </script>
 
 <div
 	class="metalness"
-	style:--left={`${left}%`}
+	style:--left={`${value}%`}
 	style:--markerShape={`5% 93%, 5% ${b}%, 93% ${c}%, 90% 93%`}
 	style:--borderShape={`0% 100%, 0% ${a}%, 100% ${d}%, 100% 100%`}
 	style:--markerColor={`hsl(0, 0%, ${stop}%)`}
@@ -62,18 +71,20 @@
 							hsl(1, 1%, 90%) 100%)`}
 >
 	<span class="metalnessSpan" id="metalnessSpan" />
-	<input
-		id="metalnessSlider"
-		name="metalnessSlider"
-		class="metalnessSlider"
-		type="range"
-		{min}
-		{max}
-		{step}
-		aria-label="metalic slider"
-		bind:value
-		bind:this={element}
-	/>
+	<div class="metalnessSlider" bind:offsetHeight={height} bind:offsetWidth={width}>
+		<input
+			id="metalnessSlider"
+			name="metalnessSlider"
+			class="metalnessSliderInput"
+			type="range"
+			{min}
+			{max}
+			{step}
+			aria-label="metalic slider"
+			bind:value
+			on:input={onInput}
+		/>
+	</div>
 	<div id="metalnessMarker" class="metalnessMarker" />
 </div>
 
@@ -98,6 +109,11 @@
 		cursor: pointer;
 		appearance: none;
 		-webkit-appearance: none;
+	}
+
+	.metalnessSliderInput {
+		width: 100%;
+		height: 100%;
 	}
 
 	.metalnessMarker {

@@ -1,38 +1,47 @@
 <script lang="ts">
 	import Icon from '$lib/Icon/Icon.svelte';
-	//@todo fix swatch definition, move everything to d.ts files
-	export let swatch: Swatch,
+	import type { ColorSwatch } from '$types';
+
+	export let swatch: ColorSwatch,
 		isDeleteMode = false;
 
 	//CSS variables
+	/**used to apply a background highlight with a timeout*/
 	let highlightClass = '';
-	const colors = {
-		material: '',
-		alpha: '',
-		metal: '',
-		metalBg: '',
-		glossy: '',
-		glossyBg: '',
-		delete: ''
+	type Colors = {
+		material: string;
+		alpha: string;
+		metal: string;
+		metalBg: string;
+		glossy: string;
+		glossyBg: string;
+		delete: string;
 	};
-	const clipPaths = {
-		alpha: '',
-		metal: '',
-		metalBg: '',
-		glossy: '',
-		glossyBG: ''
+	type ClipPaths = {
+		alpha: string;
+		metal: string;
+		metalBg: string;
+		glossy: string;
+		glossyBG: string;
 	};
 
-	const updateStyle = (swatch: Swatch) => {
-		const { h, s, l, m: metalness, g: glossiness, o: opacity } = swatch;
-		const dullS = s / 2;
-		const dullL = l / 2;
-		const g = (1 - glossiness) * 100;
-		const m = (1 - metalness) * 100;
-		const o = Math.min((1 - opacity) * 100, 90);
+	let colors: Colors;
+	let clipPaths: ClipPaths;
 
+	/**extractions from the provided swatch for manipulation*/
+	let h = 0;
+	let s = 0;
+	let l = 0;
+	let m = 0;
+	let g = 0;
+	let o = 0;
+
+	/**Convenience function to create CSS Strings for colors and clip paths*/
+	const updateStyle = (h: number, s: number, l: number, m: number, g: number, o: number) => {
+		let colors = {} as Colors,
+			clipPaths = {} as ClipPaths;
 		colors.material = `hsl(${h}deg ${s}% ${l}%)`;
-		colors.alpha = `hsl(${h}deg ${dullS}% ${dullL}%)`;
+		colors.alpha = `hsl(${h}deg ${s / 2}% ${l / 2}%)`;
 		colors.metal = `hsl(0deg 0% 60%)`;
 		colors.metalBg = `hsl(0deg 0% 20%)`;
 		colors.glossy = `hsl(${h}deg 100% 70%)`;
@@ -43,18 +52,28 @@
 		clipPaths.metalBg = `polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%)`;
 		clipPaths.glossy = `polygon(0% 100%, 50% 100%, 50% ${g}%, 0% ${g}%)`;
 		clipPaths.glossyBG = `polygon(50% 0%, 0% 0%, 0% 100%, 50% 100%)`;
+		return { colors, clipPaths };
 	};
 
+	/**
+	 *	Runs When requested by parent
+	 * @void
+	 * - Clears highlight animations class
+	 * - waits 200ms
+	 * - reaplies it to generate the animation effect again.
+	 */
 	export const applyHighlight = () => {
 		highlightClass = '';
 		setInterval(() => (highlightClass = 'highlighted'), 200);
 	};
 
-	const updateDeleteColor = (h: number, isDeleteMode: boolean) => {
-		if (isDeleteMode) colors.delete = 300 >= h && h >= 10 ? 'red' : 'white';
-	};
-	$: updateStyle(swatch);
-	$: updateDeleteColor(swatch.h, isDeleteMode);
+	// Convert swatch values into needed style and apply to CSS var strings
+	$: ({ h, s, l, m, g, o } = swatch);
+	$: g = (1 - g) * 100;
+	$: m = (1 - m) * 100;
+	$: o = Math.min((1 - 0) * 100, 90);
+	$: ({ colors, clipPaths } = updateStyle(h, s, l, m, g, o));
+	$: colors.delete = 300 >= h && h >= 10 ? 'red' : 'white';
 </script>
 
 <div class={`swatch ${highlightClass}`} on:click>

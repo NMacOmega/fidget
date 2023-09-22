@@ -6,17 +6,18 @@
 		step = 1;
 
 	//CSS Variables
-	let left = `0%`,
+	let left = 0,
 		markerColor = '#000',
 		markerBorder = `2px solid #fff`,
 		backgroundColor = 'transparent',
 		trackColor = '#eaeaea';
-	$: left = `${$zoom}%`;
+
+	$: left = $zoom;
 </script>
 
 <div
 	class="zoom"
-	style:--left={left}
+	style:--left={`${left}%`}
 	style:--marker-color={markerColor}
 	style:--marker-border={markerBorder}
 	style:--track-background-color={trackColor}

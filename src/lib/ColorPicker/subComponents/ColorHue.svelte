@@ -1,30 +1,20 @@
 <script lang="ts">
-	import type { HSVColor } from '$lib/colorFunctions';
-	import { hsv } from '$stores/material';
+	import { createEventDispatcher } from 'svelte';
 
 	export let min = 0.0,
 		max = 360,
-		step = 0.001;
+		step = 0.01,
+		value = 0;
 
-	//CSS variables
-	let value = $hsv.h,
-		left: string,
-		flatColor: string;
-
-	const generateStyle = (hsv: HSVColor) => {
-		left = `${(hsv.h / max) * 100}%`;
-		flatColor = `hsl(${hsv.h}, 100%, 50%)`;
-	};
-
-	const updateValue = (newHue: number) => {
-		$hsv = { ...$hsv, h: newHue };
-		generateStyle($hsv);
-	};
-	$: generateStyle($hsv);
-	$: updateValue(value);
+	const dispatch = createEventDispatcher();
+	const onInput = (str: string) => dispatch('hueChange', { value: Number(str) });
 </script>
 
-<div class="colorHue" style:--left={left} style:--color={flatColor}>
+<div
+	class="colorHue"
+	style:--left={`${(value / max) * 100}%`}
+	style:--color={`hsl(${value}, 100%, 50%)`}
+>
 	<input
 		id="colorHueSlider"
 		name="colorHueSlider"
@@ -35,6 +25,7 @@
 		{step}
 		aria-label="Hue slider"
 		bind:value
+		on:input={(e) => onInput(e.currentTarget.value)}
 	/>
 	<div id="colorHueMarker" class="colorHueMarker" />
 </div>

@@ -1,22 +1,11 @@
 import { readable, writable, derived, get } from 'svelte/store';
 import { readableWithInit } from './custom';
 import { convert} from '$lib/colorFunctions.js';
-import type { Color, RGBColor, HSLColor, HEXColor, HSVColor, RGBTupleColor, HSLTupleColor, HueNumberType, percentNumberType, HSVTupleColor, rgbNumberType} from '$lib/colorFunctions.js';
+import type { Color, RGBColor, HSLColor, HEXColor, HSVColor, RGBTupleColor, HSLTupleColor, HueNumberType, percentNumberType, HSVTupleColor, rgbNumberType, HSLString, HSVString, RGBString} from '$lib/colorFunctions.js';
 import type { MeshStandardMaterial, Vector2 } from 'three';
+import type { InteractionsMap, SceneObjects, SceneHighlights, THREEUUID } from '$types';
 
-/**
- * An alphanumeric identifier at least 20 characters long 
- * 
- * See {@link https://threejs.org/docs/#api/en/core/Object3D.uuid THREEJS Object3D.uuid}
-*/
-type THREEUUID = string;
 
-export type SceneObjects= {
-	[key: string]: THREE.Mesh
-};
-export type SceneHighlights = {
-	[key: string]: THREE.Mesh
-};
 
 /**An Mapped Store of THEEJS objects taken from a scene, mapped by UUID. Can only be written to once. See {@link https://threejs.org/docs/#api/en/core/Object3D.children Object3d.children}*/
 export const sceneObjects = readableWithInit<SceneObjects>({});
@@ -94,12 +83,14 @@ export const highlightFidget = (focusPoint: string) => {
 /** Returns the Mesh and material for an object of provided UUID
  * - See {@link https://threejs.org/docs/#api/en/objects/Mesh Mesh}, {@link https://threejs.org/docs/index.html?q=material#api/en/materials/Material Material} 
  * @param UUID The identifier string to search for
- * @returns The Mesh and Material in sceneObjects that bears that UUID
+ * @returns The Mesh and Material in sceneObjects that bears that UUID, or undefined if none found
  */
 function getObjectWithMaterial(UUID: THREEUUID) {
 	//.material exists on meshes, not objects. Meshes inherit from objects
 	const currObject = get(sceneObjects)[UUID];
-	const currMaterial = <MeshStandardMaterial>(Array.isArray(currObject?.material) ? currObject?.material[0] : currObject.material);
+	if(!currObject || !currObject.material) return;
+	const currMaterial = 
+	<MeshStandardMaterial>(Array.isArray(currObject?.material) ? currObject?.material[0] : currObject.material);
 	return {
 		object: currObject,
 		material: currMaterial
@@ -111,15 +102,18 @@ export const selectedUUID = (function () {
 	const { subscribe, set: setDirect } = writable('');
 
 	function set(newUUID: THREEUUID) {
-		const { object, material } = getObjectWithMaterial(newUUID);
+		const objectWithMaterial = getObjectWithMaterial(newUUID);
+		if(!objectWithMaterial) return;
+		const { object, material } = objectWithMaterial;
 		//We have a new object. Need rotation, etc...
 		material.transparent = true; //Needed to enable opacity setting
 		const { metalness: m, roughness: r, opacity: o, color: c } = material;
 		const newColor = convert.hex.toColor(c.getHexString());
 		if (newColor) colorStore._set(newColor);
-		opacityStore.setDirect(o);
-		metalnessStore.setDirect(m);
-		roughnessStore.setDirect(r);
+		/**Must upscale from material because app needs 0 <-> 100 */
+		opacityStore.setDirect(o*100);
+		metalnessStore.setDirect(m*100);
+		roughnessStore.setDirect(r*100);
 		setDirect(newUUID);
 	}
 	return { subscribe, set };
@@ -137,30 +131,32 @@ export const selectedUUID = (function () {
 const createMaterialPropertyStore = <T>(initValue:T, updateMaterialFunction:(material:MeshStandardMaterial, v:T)=>void) => {
 	const { subscribe, set: setDirect } = writable(initValue);
 	const set = (v:T) => {
-		const { material } = getObjectWithMaterial(get(selectedUUID));
-		if (!material) return;
-		updateMaterialFunction(material, v);
+		const objectWithMaterial = getObjectWithMaterial(get(selectedUUID));
+		if(!objectWithMaterial) return;
+		updateMaterialFunction(objectWithMaterial.material, v);
 		setDirect(v);
 	};
 	return { subscribe, set, setDirect };
 };
 
-/*restricting setDirect functions to this file only*/
-const opacityStore = createMaterialPropertyStore<number>(1, (material:MeshStandardMaterial, v: number) => (material.opacity = v));
-const metalnessStore = createMaterialPropertyStore<number>(1, (material:MeshStandardMaterial, v:number) => (material.metalness = v));
-const roughnessStore = createMaterialPropertyStore<number>(1, (material:MeshStandardMaterial, v: number) => (material.roughness = v));
+/*restricting setDirect functions to this file only
+* Each function must reduce value to 0 <-> 1 to match threeJS acceptable values 
+*/
+const opacityStore = createMaterialPropertyStore<number>(1, (material:MeshStandardMaterial, v: number) => (material.opacity = v/100));
+const metalnessStore = createMaterialPropertyStore<number>(1, (material:MeshStandardMaterial, v:number) => (material.metalness = v/100));
+const roughnessStore = createMaterialPropertyStore<number>(1, (material:MeshStandardMaterial, v: number) => (material.roughness = v/100));
 
 
 /*Exposing {subscribe, set} for all material properties*/
 
 /** Store to track/update Opacity of active material
- * @param number 0 <=> 1 (see {@link opacity})*/
+ * @param number 0 <=> 100 (see {@link opacity})*/
 export const opacity = { subscribe: opacityStore.subscribe, set: opacityStore.set };
 /** Store to track/update Metalness of active material
- * @param number 0 <=> 1  (see {@link metalness})*/
+ * @param number 0 <=> 100  (see {@link metalness})*/
 export const metalness = { subscribe: metalnessStore.subscribe, set: metalnessStore.set };
 /** Store to track/update Roughness of active material
- * @param number 0 <=> 1  (see {@link roughness})*/
+ * @param number 0 <=> 100  (see {@link roughness})*/
 export const roughness = { subscribe: roughnessStore.subscribe, set: roughnessStore.set };
 
 /** Derived Store to track/update Roughness of active material. Inverse of Roughness.
@@ -168,9 +164,9 @@ export const roughness = { subscribe: roughnessStore.subscribe, set: roughnessSt
  * -  (see {@link glossiness}, {@link roughness})
  * @param number 0 <=> 1 */
 export const glossiness = (function () {
-	const { subscribe } = derived(roughness, ($r) => 1 - $r);
+	const { subscribe } = derived(roughness, ($r) => 100 - $r);
 	const set = (v: number) => {
-		const newRoughness = 1 - v;
+		const newRoughness = 100 - v;
 		roughness.set(newRoughness);
 	};
 	return { subscribe, set };
@@ -205,11 +201,12 @@ const colorStore = (function () {
 	 */
 	const set = (color: Color | undefined) => {
 		if (!color) return;
-		const { material } = getObjectWithMaterial(get(selectedUUID));
-		if (!material) return;
+		console.log(color)
+		const objectWithMaterial = getObjectWithMaterial(get(selectedUUID));
+		if (!objectWithMaterial) return;
 		const { h, s, l } = color.hsl;
-		//@todo: do I need to convert hue by dividing by 360?
-		material.color.setHSL(h, s, l);
+		console.dir(color);
+		objectWithMaterial.material.color.setHSL(h/360, s/100, l/100);
 		_set(color);
 	};
 	return { subscribe, _set, set };
@@ -244,7 +241,7 @@ export const hsl = (function () {
 /**
  * {@link rgb}: A Writable store to track RGB Color value. Set function will update {@link colorStore}
  * Valid RGB values:
- * - r, g, b = 0 <=> 360
+ * - r, g, b = 0 <=> 255
  * 
  * FORMAT: {r, g, b} or [r, g, b]
  * 
@@ -308,7 +305,7 @@ export const hex = (function () {
 /**
  *{@link hslSet}: Updates the Color Store via HSL Values. See {@link HSLColor}, {@link HSLTupleColor}, {@link Color}
  */
-/*prettier-ignore*/ function hslSet(v:HSLColor | HSLTupleColor) 
+/*prettier-ignore*/ function hslSet(v:HSLColor | HSLTupleColor | HSLString) 
 {colorStore.set(convert.hsl.toColor(v));}
 /**
  * {@link hslSetHue}: Updates the Color Store via HSL Hue. See {@link HueNumberType}, {@link Color}
@@ -328,7 +325,7 @@ export const hex = (function () {
 /**
  * {@link hsvSet}L Updates the Color Store via HSV Values. See {@link HSVColor}, {@link HSVTupleColor}, {@link Color}
  */
-/*prettier-ignore*/ function hsvSet(v:HSVColor|HSVTupleColor) 
+/*prettier-ignore*/ function hsvSet(v:HSVColor|HSVTupleColor|HSVString) 
 {colorStore.set(convert.hsv.toColor(v));}
 /**
  * {@link hslSetLuminosity}: Updates the Color Store via HSV Hue. See {@link HueNumberType}, {@link Color}
@@ -348,7 +345,7 @@ export const hex = (function () {
 /**
  * {@link rgbSet}: Updates the Color Store via RGB Values. See {@link RGBColor}, {@link RGBTupleColor}, {@link Color}
  */
-/*prettier-ignore*/ function rgbSet(v:RGBColor | RGBTupleColor) 
+/*prettier-ignore*/ function rgbSet(v:RGBColor | RGBTupleColor | RGBString) 
 {colorStore.set(convert.rgb.toColor(v));}
 /**
  * {@link rgbSetRed}: Updates the Color Store via RGB Red. See {@link rgbNumberType}, {@link Color}
