@@ -6,8 +6,9 @@
 	import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
 	import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
 	import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
-	import Test from '$lib/test/test.svelte';
-	import TestTwo from '$lib/test/TestTwo.svelte';
+	import ColorPickerMock from '@comps/ColorPickerMock/ColorPickerMock.svelte';
+	import ColorOptionsMock from '@comps/ColorOptionsMock/ColorOptionsMock.svelte';
+	import ZoomMock from '@comps/ZoomMock/ZoomMock.svelte';
 </script>
 
 <section class="firstSection">
@@ -28,9 +29,12 @@
 		<button class="cameraButton next" on:click={camera.next}
 			><Icon class="fa-solid fa-angle-right" /></button
 		>
-		<ColorPicker />
+		<!-- <ColorPicker /> -->
 		<AnimationStartButton />
-		<ZoomSlider />
+		<!-- <ZoomSlider /> -->
+		<ColorPickerMock />
+		<ColorOptionsMock />
+		<ZoomMock />
 	</div>
 </section>
 

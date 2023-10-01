@@ -34,7 +34,8 @@ const config = {
 		},
 		alias: {
 			$stores: 'src/lib/stores',
-			$types: 'src/lib/types'
+			$types: 'src/lib/types',
+			'@comps': 'src/components'
 		}
 	}
 };
