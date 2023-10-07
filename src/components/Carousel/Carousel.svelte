@@ -1,47 +1,37 @@
 <script lang="ts">
 	import Icon from '$lib/Icon/Icon.svelte';
 
-	type Option = {
-		hsl: { h: number; s: number; l: number };
-		opacity: number;
-		roughness: number;
-		metalness: number;
-	};
+	//Usage
+	// 	<Carousel
+	// 	type="incremental"
+	// 	onClick={() => console.log()}
+	// 	styleRefs={{ container: 'dsfsfd', next: 'sdfsdf', prev: 'sdfsdf' }}
+	// >
+	// 	<!-- <slot name="prevButtonContent">Click me!</slot> -->
+	// 	<!-- <slot name="nextButtonContent">Click me!</slot> -->
+	// 	<!-- <slot name="markerContent">I sliede!</slot> -->
+	// 	<!-- <slot name="Items">All my items</slot> -->
+	// </Carousel>
 
-	/**@TODO: Make this generic with slots for skeleton.svlelte ui*/
-	//https://www.w3.org/WAI/ARIA/apg/patterns/carousel/
-	//https://www.skeleton.dev/components/accordions
+	/**Triggered when the user scrolls over the items container using a mouse wheel*/
+	export let onWheel: true | undefined = undefined;
+	export let onSwipe: true | undefined = undefined;
+	export let onMarkerSwipe: true | undefined = undefined;
+	export let onMarkerDrag: true | undefined = undefined;
+	export let onScrollbarClick: true | undefined = undefined;
 
-	//To be updated by values from the current material
-	let h = 220;
-	let s = 75;
-	let l = 65;
-	let opacity = 100;
-	let roughness = 50;
-	let metalness = 50;
-
-	let activeOption = 0;
-
-	let displayOptions: Option[] = [];
-	/**First entry will always be the default props of the selected material*/
-	$: displayOptions = [{ hsl: { h, s, l }, opacity, roughness, metalness }];
-
-	const colorStrings = {
-		rough: ({ h = 0 }) => `hsl(${h}deg, 70%, 70%)`,
-		roughBG: ({ h = 0 }) => `hsl(${h}deg, 40%, 40%)`,
-		opacity: ({ h = 0 }) => `hsl(${h}deg, 70%, 70%)`,
-		hsl: ({ h = 0, s = 0, l = 0 }) => `hsl(${h}deg, ${s}%, ${l}%)`
-	};
-	const clipPaths = {
-		leftSide: {
-			base: (v: number) => `polygon(0% ${v}%, 50% ${v}%, 50% 100%, 0% 100%)`,
-			inverted: (v: number) => `polygon(0% ${v}%, 50% ${v}%, 50% 0%, 0% 0%)`
-		},
-		rightSide: {
-			base: (v: number) => `polygon(50% ${v}%, 100% ${v}%, 100% 100%, 50% 100%)`,
-			inverted: (v: number) => `polygon(50% ${v}%, 100% ${v}%, 100% 0%, 50% 0%)`
-		}
-	};
+	//TODO: integrate booleans to control behavior, slots for styling, and logic for inserting elements
+	//If certain properteis are not provided, we need to detect and put our own styling in
+	//bools
+	/*
+		incremental vs continuous
+		buttons or no buttons
+		scrollbar or no scrollbar
+		do you want to listen for touch
+		do you want to listen for the mouse wheel
+		Do you want to auto increment
+		How do we handle rounding the horn?
+	*/
 
 	/**Elements for Scroll binding*/
 	let scrollElem: HTMLElement | null = null;
@@ -152,6 +142,7 @@
 			newMarkerTouchX = clampMarkerX(newMarkerTouchX);
 			markerTouchX = newMarkerTouchX;
 			updateScrollValues({ scrollX: newScrollX, markerX: newMarkerTouchX, moveScroll: true });
+			lockScrollTimer();
 		},
 		activate: () => {
 			isMouseDown = true;
@@ -226,60 +217,35 @@
 	}}
 	on:resize={onResize}
 />
-<div
-	class="colorOptions"
-	style:--icon-size={'120px'}
-	style:--first-spacing={'60px'}
-	style:--icon-spacing={'120px'}
-	style:--icon-vert-padding={'20px'}
-	style:height={'calc(var(--icon-size) + var(--icon-vert-padding))'}
-	style:--marker-size={'40px'}
-	style:--marker-pos={`${scrollMarkerX}px`}
->
-	<button class="nav-button nav-prev" on:click={() => scrollEventHandlers.button('prev')}
-		><Icon class="fa-solid fa-angle-left" /></button
-	>
+<div class="carousel" style:--marker-size={'40px'} style:--marker-pos={`${scrollMarkerX}px`}>
+	<button class="nav-button nav-prev" on:click={() => scrollEventHandlers.button('prev')}>
+		<slot name="prevButtonContent">
+			<Icon class="fa-solid fa-angle-right" />
+		</slot>
+	</button>
+
+	<!-- https://stackoverflow.com/questions/56988717/how-to-target-a-component-in-svelte-with-css -->
 	<div
-		class="inner-container"
+		class="carousel-container-outer"
 		bind:this={scrollElem}
 		on:wheel|preventDefault|stopPropagation={(e) => scrollEventHandlers.wheel(e.deltaY)}
 		on:scroll|preventDefault|stopPropagation={() =>
 			scrollEventHandlers.scroll(scrollElem?.scrollLeft || 0)}
 		on:touchmove={() => scrollEventHandlers.scrollTouchSwipe(scrollElem?.scrollLeft || 0)}
 	>
-		<div class="circles">
-			{#each displayOptions as option, i}
-				<div class="circle">
-					{#if i === activeOption} <span class={'highlight-bg'} /> {/if}
-					<span
-						class="metalness-bg"
-						style:clip-path={clipPaths.rightSide.inverted(100 - option.metalness)}
-					/>
-					<span
-						class="metalness"
-						style:clip-path={clipPaths.rightSide.base(100 - option.metalness)}
-					/>
-					<span
-						class="roughness-bg"
-						style:background-color={colorStrings.roughBG(option.hsl)}
-						style:clip-path={clipPaths.leftSide.inverted(100 - option.roughness)}
-					/>
-					<span
-						class="roughness"
-						style:background-color={colorStrings.rough(option.hsl)}
-						style:clip-path={clipPaths.leftSide.base(100 - option.roughness)}
-					/>
-					<div class="circle-inner">
-						<span class="opacity" style:background-color={colorStrings.opacity(option.hsl)} />
-						<span class="color" style:background-color={colorStrings.hsl(option.hsl)} />
-					</div>
-				</div>
-			{/each}
-		</div>
+		{#if $$slots.container}
+			<slot name="container">
+				<slot name="items" />
+			</slot>
+		{:else}
+			<div class="carousel-container-inner"><slot name="items" /></div>
+		{/if}
 	</div>
-	<button class="nav-button nav-next" on:click={() => scrollEventHandlers.button('next')}
-		><Icon class="fa-solid fa-angle-right" /></button
-	>
+	<slot name="nextButton">
+		<button class="nav-button nav-next" on:click={() => scrollEventHandlers.button('next')}
+			><Icon class="fa-solid fa-angle-right" /></button
+		>
+	</slot>
 	<div
 		class="scroll-bar"
 		bind:this={scrollbarElem}
@@ -287,26 +253,28 @@
 			scrollEventHandlers.scrollbar(e.offsetX);
 		}}
 	>
-		<span
-			id="scroll-marker"
-			class="scroll-indicator"
-			bind:this={scrollMarkerElem}
-			on:mousedown={(e) => {
-				scrollEventHandlers.activate();
-				scrollEventHandlers.marker(e.movementX);
-			}}
-			on:touchstart={(e) => {
-				scrollEventHandlers.activate();
-				scrollEventHandlers.markerTouchSwipe(e.touches[0].clientX);
-			}}
-			on:touchmove|preventDefault|stopPropagation={(e) =>
-				scrollEventHandlers.markerTouchSwipe(e.touches[0].clientX)}
-		/>
+		<slot name="scrollMarker">
+			<span
+				id="scroll-marker"
+				class="scroll-indicator"
+				bind:this={scrollMarkerElem}
+				on:mousedown={(e) => {
+					scrollEventHandlers.activate();
+					scrollEventHandlers.marker(e.movementX);
+				}}
+				on:touchstart={(e) => {
+					scrollEventHandlers.activate();
+					scrollEventHandlers.markerTouchSwipe(e.touches[0].clientX);
+				}}
+				on:touchmove|preventDefault|stopPropagation={(e) =>
+					scrollEventHandlers.markerTouchSwipe(e.touches[0].clientX)}
+			/>
+		</slot>
 	</div>
 </div>
 
 <style>
-	.colorOptions {
+	.carousel {
 		--bg-color: hsla(0, 0%, 0%, 50%);
 		width: 70%;
 		position: absolute;
@@ -341,7 +309,7 @@
 		grid-area: prev;
 	}
 
-	.inner-container {
+	.carousel-container-outer {
 		grid-area: inner;
 		background-color: var(--bg-color);
 		border-radius: 40px;
@@ -353,8 +321,18 @@
 		height: 100%;
 	}
 
-	.inner-container::-webkit-scrollbar {
+	.carousel-container-outer::-webkit-scrollbar {
 		display: none;
+	}
+
+	.carousel-containter-inner {
+		height: 100%;
+		width: fit-content;
+		display: flex;
+		padding: 30px 60px;
+		align-items: center;
+		justify-content: center;
+		gap: var(--icon-spacing, 60px);
 	}
 
 	.scroll-bar {
@@ -380,73 +358,5 @@
 		background-color: var(--bg-color);
 		border-radius: 100%;
 		transform: translateX(var(--marker-pos));
-	}
-
-	.circles {
-		height: 100%;
-		width: fit-content;
-		display: flex;
-		padding: 30px 0;
-		align-items: center;
-		justify-content: center;
-		gap: var(--icon-spacing, 60px);
-	}
-
-	.circle:first-child {
-		margin-left: var(--first-spacing, 60px);
-	}
-
-	.circle:last-child {
-		margin-right: var(--first-spacing, 60px);
-	}
-
-	.circle {
-		width: var(--icon-size, 60px);
-		height: var(--icon-size, 60px);
-		position: relative;
-	}
-
-	.circle-inner {
-		position: absolute;
-		left: 50%;
-		top: 50%;
-		transform: translate(-50%, -50%);
-		width: 75%;
-		height: 75%;
-	}
-
-	.color,
-	.opacity,
-	.metalness,
-	.metalness-bg,
-	.roughness,
-	.roughness-bg,
-	.highlight-bg {
-		display: block;
-		position: absolute;
-		left: 50%;
-		top: 50%;
-		transform: translate(-50%, -50%);
-		border-radius: 50%;
-		width: 100%;
-		height: 100%;
-	}
-
-	.highlight-bg {
-		background-color: white;
-		width: 110%;
-		height: 110%;
-	}
-
-	.metalness {
-		background-color: silver;
-	}
-	.metalness-bg {
-		background-color: black;
-	}
-	.roughness {
-	}
-
-	.roughness-bg {
 	}
 </style>

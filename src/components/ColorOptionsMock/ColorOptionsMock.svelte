@@ -10,6 +10,8 @@
 		metalness: number;
 	};
 
+	//@todo: Get the buttons to change the material, then add controls to delete and update with new color
+
 	//To be updated by values from the current material
 	let h = 220;
 	let s = 75;
@@ -151,6 +153,7 @@
 			newMarkerTouchX = clampMarkerX(newMarkerTouchX);
 			markerTouchX = newMarkerTouchX;
 			updateScrollValues({ scrollX: newScrollX, markerX: newMarkerTouchX, moveScroll: true });
+			lockScrollTimer();
 		},
 		activate: () => {
 			isMouseDown = true;
@@ -382,12 +385,12 @@
 	}
 
 	.circles {
-		height: 100%;
+		height: fit-content;
 		width: fit-content;
 		display: flex;
-		padding: 30px 60px;
 		align-items: center;
 		justify-content: center;
+		padding: 30px 60px;
 		gap: var(--icon-spacing, 60px);
 	}
 
