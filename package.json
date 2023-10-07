@@ -32,8 +32,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@threlte/core": "^6.0.3",
-		"@threlte/extras": "^5.0.5",
 		"three": "^0.153.0",
 		"zod": "^3.21.4"
 	}
