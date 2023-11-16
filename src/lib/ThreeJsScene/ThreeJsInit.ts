@@ -28,9 +28,9 @@
      * 
      * calls {@link onModelFail} if failed
      */
-    export function initializeThreeJSSceneFromModelURL(canvasElem: HTMLCanvasElement, modelURL: string){
+    export function initializeThreeJSSceneFromModelURL(canvasElem: HTMLCanvasElement, modelURL: string, bgColorHex: string, bgAlpha: number){
         new GLTFLoader().load(modelURL, 
-            (gltf)=>onModelSuccess(gltf, canvasElem), 
+            (gltf)=>onModelSuccess(gltf, canvasElem, bgColorHex, bgAlpha), 
             undefined, //No callback while loading has been made
             (error)=>onModelFail(canvasElem, error));
     }
@@ -38,9 +38,14 @@
     /**
      * Builds a threeJS scene from the loaded GLTF instance and connects it to the provided canvas element.
      * 
+     * Also sets the background color and opacity, if optional {@link bgColorHex} or {@link bgAlpha} are not provided, 
+     * the background will be transparent.
+     * 
      * esential threeJS components asre saved in global stores for later use.
      * @param gltf The loaded GLTF Model
-     * @param canvasElem The Canas element to build scene on
+     * @param canvasElem The Canvas element to build scene on
+     * @param bgColorHex An optional color string for the background, format #000000
+     * @param bgAlpha An optional opacity for the background
      * @void 
      * 
      * Builds Scene and connects to {@link canvasElem}
@@ -54,10 +59,9 @@
      * - {@link orbitStore orbit}
      * - {@link animations}
      */
-    function onModelSuccess(gltf: GLTF, canvasElem: HTMLCanvasElement){
+    function onModelSuccess(gltf: GLTF, canvasElem: HTMLCanvasElement, bgColorHex: string, bgAlpha: number){
         //scene
         const scene = new THREE.Scene();
-        scene.background = null;
         scene.add(gltf.scene);
         //camera
         const { height = 0, width = 0 } = canvasElem.getBoundingClientRect();
@@ -65,6 +69,10 @@
         //renderer
         const renderer = new THREE.WebGL1Renderer({ antialias: true, canvas: canvasElem, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        const validBGHex = parseHexValue(bgColorHex);
+        const validBGAlpha = typeof(bgAlpha) === 'number' && bgAlpha > 0 && bgAlpha <= 1;
+        if(validBGHex && validBGAlpha) renderer.setClearColor(new THREE.Color(validBGHex), bgAlpha);
+        else renderer.setClearColor(0x000000, 0);
         //environemnt & pmrem
         const environment = new RoomEnvironment();
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -194,3 +202,18 @@
             return aspect;
     
         }
+
+    /**
+ * Returns a string #000000 <-> #ffffff if the provided value is a valid hex color string.
+ * - otherwise, returns undefined
+ * @param {string} val a string value in hexidecimal format
+ * @returns {string | undefined} The Hexadecimal result string or undefined if failed
+ */
+function parseHexValue(val: string) {
+    if(val === undefined) return;
+	let str = val.toString() || '';
+	str = str.match(/[\dA-Fa-f]/g)?.join('') || '';
+	if (str.length > 6) str = str.substring(0, 5);
+	if (str.length === 3) str = `${str}${str}`;
+	if (str.length === 6) return `#${str}`;
+}

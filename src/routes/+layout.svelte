@@ -1,3 +1,7 @@
+<script>
+	import '../app.postcss';
+</script>
+
 <header class="header">
 	<ul class="headerList">
 		<a href="#" class="headerLink">

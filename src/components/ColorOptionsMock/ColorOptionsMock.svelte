@@ -307,33 +307,36 @@
 	</div>
 </div>
 
-<style>
+<style lang="postcss">
+	@import 'static/breakpoints.postcss';
+
 	.colorOptions {
 		--bg-color: hsla(0, 0%, 0%, 50%);
-		width: 70%;
+		width: 100vw;
 		position: absolute;
 		bottom: 150px;
 		left: 50%;
 		transform: translateX(-50%);
 		display: grid;
-		grid-template-columns: 10px 1fr 10px fit-content 10px 1fr 10px;
-		grid-template-rows: max-content 10px var(--marker-size, max-content);
+		grid-template-columns: 1rem min-content 1.2rem 1fr 1.2rem min-content 1rem;
+		grid-template-rows: max-content 3rem var(--marker-size, max-content);
 		grid-template-areas:
 			'. prev . inner . next .'
-			'. prev . . . next .'
-			'. prev . scroll . next .';
+			'. . . . . . .'
+			'. . . scroll . . .';
 		align-items: center;
 		justify-content: center;
 	}
 
 	.nav-button {
-		font-size: 3rem;
-		padding: 10px;
-		border-radius: 100%;
-		width: 100px;
-		height: 100px;
+		--clamp-size: clamp(4rem, 10vw, 6rem);
+		width: var(--clamp-size);
+		height: var(--clamp-size);
+		padding: 0.1rem;
+		font-size: clamp(2.2rem, 2vw + 1.5rem, 4rem);
 		background-color: var(--bg-color);
 		color: white;
+		border-radius: 100%;
 	}
 
 	.nav-next {
@@ -393,14 +396,6 @@
 		padding: 30px 60px;
 		gap: var(--icon-spacing, 60px);
 	}
-
-	/* .circle:first-child {
-		margin-left: var(--first-spacing, 60px);
-	}
-
-	.circle:last-child {
-		margin-right: var(--first-spacing, 60px);
-	} */
 
 	.circle {
 		width: var(--icon-size, 60px);

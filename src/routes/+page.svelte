@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { PUBLIC_MODEL_URL } from '$env/static/public';
 	import ThreeJsScene from '$lib/ThreeJsScene/ThreeJsScene.svelte';
-	import Icon from '$lib/Icon/Icon.svelte';
-	import { camera } from '$stores/camera';
-	import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
-	import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
-	import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
-	import ColorPickerMock from '@comps/ColorPickerMock/ColorPickerMock.svelte';
-	import ColorOptionsMock from '@comps/ColorOptionsMock/ColorOptionsMock.svelte';
-	import ZoomMock from '@comps/ZoomMock/ZoomMock.svelte';
+	// import Icon from '$lib/Icon/Icon.svelte';
+	// import { camera } from '$stores/camera';
+	// import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
+	// import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
+	// import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
+	// import ColorPickerMock from '@comps/ColorPickerMock/ColorPickerMock.svelte';
+	// import ColorOptionsMock from '@comps/ColorOptionsMock/ColorOptionsMock.svelte';
+	// import ZoomMock from '@comps/ZoomMock/ZoomMock.svelte';
+	import Controls from '$lib/Controls/Controls.svelte';
 </script>
 
 <section class="firstSection">
@@ -22,19 +23,23 @@
 
 <section class="secondSection">
 	<div class="demo">
-		<ThreeJsScene modelURL={PUBLIC_MODEL_URL || ''} />
-		<button class="cameraButton prev" on:click={camera.prev}
+		<ThreeJsScene
+			modelURL={PUBLIC_MODEL_URL || ''}
+			backgroundColorHex={'#000000'}
+			backgroundOpacity={0.5}
+		/>
+		<!-- <button class="cameraButton prev" on:click={camera.prev}
 			><Icon class="fa-solid fa-angle-left" /></button
 		>
 		<button class="cameraButton next" on:click={camera.next}
 			><Icon class="fa-solid fa-angle-right" /></button
-		>
+		> -->
 		<!-- <ColorPicker /> -->
-		<AnimationStartButton />
+		<!-- <AnimationStartButton /> -->
 		<!-- <ZoomSlider /> -->
-		<ColorPickerMock />
-		<ColorOptionsMock />
-		<ZoomMock />
+		<!-- <ColorPickerMock /> -->
+		<!-- <ColorOptionsMock /> -->
+		<Controls />
 	</div>
 </section>
 
@@ -87,8 +92,14 @@
 	.secondSection {
 		position: relative;
 		overflow: hidden;
-		background-color: hsla(220, 100%, 2%, 0.2);
 		border-radius: 16px;
+	}
+	.demo {
+		background-color: #00000050;
+		height: 100vh;
+		min-width: 100vw;
+		margin: auto;
+		position: relative;
 	}
 
 	.cta {

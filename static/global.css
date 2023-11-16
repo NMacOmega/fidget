@@ -1,15 +1,25 @@
 :root {
-	--color-primary: hsl(1, 0%, 100%);
-	--color-secondary: hsl(56.9, 81.6%, 53.1%);
-	--color-bg-primary: hsl(221.9, 100%, 25.3%);
-	--color-bg-secondary: hsl(221.9, 100%, 25.3%);
+	--color-primary: hsl(1, 0%, 100%); /* 	#ffffff */
+	--color-secondary: hsl(56.9, 81.6%, 53.1%); /* 	#e9df26 */
+	--color-bg-primary: hsl(221.9, 100%, 25.3%); /* #002781 */
+	--color-bg-secondary: hsl(221.9, 100%, 25.3%); /* #e9df26 */
 	--color-bg-accent: #e9df26;
+}
+
+* {
+	margin: 0;
+	padding: 0;
 }
 
 *,
 *::before,
 *::after {
+	box-sizing: inherit;
+}
+
+html {
 	box-sizing: border-box;
+	font-size: 62.5%;
 }
 
 ul,
@@ -23,7 +33,8 @@ body {
 	background-color: var(--color-bg-primary);
 
 	font-family: 'Twentieth Century Bold' !important;
-	font-size: 16px;
+	font-size: 1.6rem;
+	/* font-size: 16px; */
 	font-style: normal;
 	text-transform: uppercase;
 	-webkit-font-smoothing: antialiased;

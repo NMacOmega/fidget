@@ -1,0 +1,179 @@
+<script>
+	import ColorIcon from './ColorIcon/ColorIcon.svelte';
+	import FidgetIcon from './FidgetIcon/FidgetIcon.svelte';
+	import Slider from './../Slider/Slider.svelte';
+	import { zoom } from '$stores/camera';
+
+	let zoombarOpen = false;
+
+	const onZoomBarChange = (e) => {
+		console.log(e.currentTarget.value);
+		zoom.setFromValue(Number(e.currentTarget.value));
+	};
+
+	$: console.log($zoom);
+</script>
+
+<div class="controls">
+	<div class="bg" />
+	<div class="colorIcon">
+		<ColorIcon />
+	</div>
+	<div class="fidgetIcon">
+		<FidgetIcon />
+	</div>
+	<div class="zoom">
+		<div
+			class="zoomBar"
+			style:transform={`translateX(${zoombarOpen ? 'calc(var(--ts) * 0.4)' : '200px'})`}
+		>
+			<div class="zoomIcons">
+				<i class="fa-solid fa-magnifying-glass-plus" />
+				<i class="fa-solid fa-magnifying-glass-minus" />
+			</div>
+			<Slider vertical value={$zoom} on:input={onZoomBarChange} min={1} max={99} step={5} />
+		</div>
+		<button
+			class="zoomButton"
+			style:transform={`translateX(${!zoombarOpen ? '8px' : '-8px'})`}
+			on:click={() => (zoombarOpen = !zoombarOpen)}
+			><i class="fa-solid fa-magnifying-glass-minus" /></button
+		>
+	</div>
+</div>
+
+<style type="postcss">
+	.controls {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: grid;
+		grid-template-columns: 200px 200px 1fr;
+		grid-template-rows: 1fr 5px 200px;
+		grid-template-areas: '. . .' '. . .' 'color fidget zoom';
+		pointer-events: none;
+	}
+
+	.controls > * {
+		pointer-events: auto;
+	}
+
+	.colorIcon {
+		grid-area: color;
+		width: 100%;
+		height: 100%;
+	}
+
+	.fidgetIcon {
+		grid-area: fidget;
+		width: 100%;
+		height: 100%;
+	}
+
+	.zoom {
+		--l: 50px; /* line thickness*/
+		--s: 80px; /* thumb size*/
+		--w: 50px; /* thumb width */
+		--ts: 250px; /*track size*/
+		--b: transparent; /*track color*/
+		--tc: #ababab; /*thumb color*/
+		--tb: black; /*thumb border color*/
+
+		grid-area: zoom;
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		justify-content: center;
+		padding-right: 30px;
+		padding-bottom: 20px;
+	}
+
+	.zoomBar {
+		--offset: 100vw;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		height: var(--ts);
+		width: var(--ts); /*Needed so thumb can cover both ends of the slider*/
+		transform: translateX(var(--offset)); /*Needed to move slider to side of the screen*/
+		transition: transform 0.4s;
+		margin: 30px 0;
+	}
+
+	.zoomButton {
+		color: white;
+		border: 1px solid white;
+		border-radius: 10px;
+		width: 4rem;
+		height: 6rem;
+		transform: translateX(-8px);
+		transition: transform 0.4s;
+	}
+
+	.zoomIcons {
+		position: absolute;
+		background-color: white;
+		width: 50px;
+		height: 250px;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		flex-direction: column;
+		border-radius: 20px;
+		align-items: center;
+		justify-content: space-between;
+		padding: 20px 0;
+	}
+
+	.zoomIcons > i {
+		color: black;
+		font-size: 2rem;
+	}
+
+	:global(.zoomBar > .slider) {
+		width: 100%;
+		height: var(--l);
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		background: var(--b);
+		appearance: none;
+		cursor: pointer;
+	}
+
+	@define-mixin zoomThumbStyle {
+		height: var(--s);
+		width: var(--w);
+		aspect-ratio: 1;
+		border-radius: 10px;
+		background-color: var(--tc);
+		border: 1px solid var(--tb);
+	}
+
+	/* THUMBS */
+	/* horizontal */
+	:global(.zoomBar > .slider::-webkit-slider-thumb) {
+		@mixin zoomThumbStyle;
+	}
+	:global(.zoomBar > .slider::-moz-range-thumb) {
+		@mixin zoomThumbStyle;
+	}
+	:global(.zoomBar > .slider::-ms-thumb) {
+		@mixin zoomThumbStyle;
+	}
+	/* vertical */
+	:global(.zoomBar > .slider.vertical::-webkit-slider-thumb) {
+		@mixin zoomThumbStyle;
+	}
+	:global(.zoomBar > .slider.vertical::-moz-range-thumb) {
+		@mixin zoomThumbStyle;
+	}
+	:global(.zoomBar > .slider.vertical::-ms-thumb) {
+		@mixin zoomThumbStyle;
+	}
+</style>

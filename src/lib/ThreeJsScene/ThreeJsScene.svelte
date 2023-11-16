@@ -7,11 +7,15 @@
 
 	/**URL to model, stored in environment and provided by page.svelte*/
 	export let modelURL: string;
+	/**Optional Hex Color code for the scene background, on #000000 string format*/
+	export let backgroundColorHex: string = 'N/A';
+	/**Optional opacity of  the background color, 0.0 <--> 1.0*/
+	export let backgroundOpacity: number = -1;
 
 	let threeCanvas: HTMLCanvasElement;
 
 	if (browser && modelURL) {
-		onMount(() => initializeThreeJSSceneFromModelURL(threeCanvas, modelURL));
+		onMount(() => initializeThreeJSSceneFromModelURL(threeCanvas, modelURL, '', -1));
 	}
 </script>
 
@@ -29,8 +33,8 @@
 
 <style>
 	.canvas {
-		width: 100% !important;
+		min-width: 100% !important;
 		max-height: 100%;
-		height: 100% !important;
+		margin: auto;
 	}
 </style>
