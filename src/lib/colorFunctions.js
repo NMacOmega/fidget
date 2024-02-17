@@ -198,8 +198,8 @@ const hsvTupleSchema = z.tuple([hueNumber, percentNumber, percentNumber]);
  * - RGB: {r, g, b} {@link RGBColor}
  * - HEX: "FFFFFF" {@link HEXColor}
  *
- *  See {@link Color lib/colorFunctions.js.Color}
- * @typedef {z.infer<colorSchema>} Color
+ *  See {@link ColorObject lib/colorFunctions.js.ColorObject}
+ * @typedef {z.infer<colorSchema>} ColorObject
  */
 export const colorSchema = z.object({
 	hex: hexSchema,
@@ -260,7 +260,7 @@ export const convert = {
 		 * FORMAT: {r, g, b} or [r, g, b]
 		 * 
 		 * @param {RGBColor | RGBTupleColor | RGBString} val RGB Parsable. See {@link RGBColor}, {@link RGBTupleColor}
-		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
+		 * @returns {ColorObject | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link ColorObject}  
 		 * @see {@link convert.rgb.toColor} 
 		 * */
 		toColor: (val) => parseAndConvert(val, rgbSchema, colorSchema, [valueToColorObject], castToRGB),
@@ -314,7 +314,7 @@ export const convert = {
 		 * - FORMAT: {h, s, l} or [h, s, l]
 		 * 
 		 * @param {HSLColor | HSLTupleColor | HSLString} val HSL Parsable. See {@link HSLColor}, {@link HSLTupleColor}, {@link hueNumber}, {@link percentNumber}
-		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
+		 * @returns {ColorObject | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link ColorObject}  
 		 * @see {@link convert.hsl.toColor} 
 		 * */
 		toColor: (val) => parseAndConvert(val, hslSchema, colorSchema, [valueToColorObject], castToHSL),
@@ -366,7 +366,7 @@ export const convert = {
 		 * - v = 0 <=> 100
 		 * - FORMAT: {h, s, v} or [h, s, v]
 		 * 
-		 * @param {HSVColor | HSVTupleColor | HSVString} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
+		 * @param {HSVColor | HSVTupleColor | HSVString} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}		 * @returns {ColorObject | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link ColorObject}  
 		 * @see {@link convert.hsv.toColor} 
 		 * */
 		toColor: (val) => parseAndConvert(val, hsvSchema, colorSchema, [valueToColorObject], castToHSV),
@@ -420,7 +420,7 @@ export const convert = {
 		 * 
 		 *   letters are not case sensitive
 		 * @param {HEXColor} val HEX Parsable. See {@link HEXColor}
-		 * @returns {Color | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link Color}  
+		 * @returns {ColorObject | undefined} An object with HSL, HSV, HEX, and RGB values, or undefined if failed. See {@link ColorObject}  
 		 * @see {@link convert.hex.toColor} 
 		 * */
 		toColor: (val) => parseAndConvert(val, hexSchema, colorSchema, [valueToColorObject], castToHEX),
@@ -459,7 +459,7 @@ function parseAndConvert(val, schema, _targetSchema, conversionFunctions, option
 /**
  * Converts a given color value into an object of HSL, HSV, RGB, and HEX values
  * @param {HSLColor | RGBColor | HSVColor | HEXColor} value A Color Value to build object from
- * @returns {Color} Color
+ * @returns {ColorObject} Color
  * @see {@link valueToColorObject colorFunctions.js/valueToColorObject}
  */
 function valueToColorObject(value) {
@@ -610,7 +610,7 @@ function preprocessRGB(unknownValue) {
  * @param {unknown} val An unknown value, presumed to be a string
  * @returns {HEXColor | undefined} The Hexadecimal result string or undefined if failed
  */
-function preprocessHex(val) {
+export function preprocessHex(val) {
 	//@ts-expect-error nullish cases handled by default empty strings
 	let str = val.toString() || '';
 	str = str.match(/[\dA-Fa-f]/g)?.join('') || '';
@@ -767,4 +767,67 @@ function RGBtoHEX(rgb) {
 		B = '0' + B;
 	}
 	return R + G + B;
+}
+
+/**
+ * @class A {@link Color} Object with Setter Functions to change the stored value
+ *
+ * @this {ColorObject} A {@link ColorObject} instance with an added vailidity boolean:
+ * - hex?: A Hex String
+ * - hsl?: {h,s,l}
+ * - hsv?: {h,s,v}
+ * - rgb?: {r,g,b}
+ * - isValid: true/false
+ *
+ * @see {HEXColor} colorFunctions/HexColor
+ * @see {HSLColor} colorFunctions/HSLColor
+ * @see {HSVColor} colorFunctions/HSVColor
+ * @see {RGBColor} colorFunctions/RGBColor
+ * @see {Color} colorFunctions/Color
+ */
+export class Color {
+	/**
+	 * Accepts any valid syntax for {@link HEXColor}, {@link HSVColor}, {@link HSLColor}, or {@link RGBColor}
+	 *
+	 * The input will be parsed into a {@link ColorObject} if possible
+	 *
+	 * If provided value fails to parse, will return [undefined]
+	 *
+	 * If no value is provided, will be set to default value
+	 *
+	 * @example defaultValue = {
+	 * 	hex: '000000',
+	 *  hsl: { h: 0, s: 0, l: 0 },
+	 *  hsv: { h: 0, s: 0, v: 0 },
+	 *  rgb: { r: 0, g: 0, b: 0 },
+	 *  isValidColor: true
+	 * }
+	 * @param {HEXColor | HSLColor | HSVColor | RGBColor | undefined} value a value to parse into a {@link Color}
+	 * @see {HexColor} colorFunctions/HexColor
+	 * @see {HSVColor} colorFunctions/HSVColor
+	 * @see {HSLColor} colorFunctions/HSLColor
+	 * @see {RGBColor} colorFunctions/RGBColor
+	 */
+	constructor(value = undefined) {
+		/**Empty case. Returns default object*/
+		if (value === undefined) {
+			this.hex = '000000';
+			this.hsv = { h: 0, s: 0, l: 0 };
+			this.hsl = { h: 0, s: 0, v: 0 };
+			this.rgb = { r: 0, g: 0, b: 0 };
+			this.isValidColor = true;
+			return;
+		}
+
+		const parsedValue = valueToColorObject(value);
+		if (parsedValue) {
+			this.hex = parsedValue.hex;
+			this.hsl = parsedValue.hsl;
+			this.hsv = parsedValue.hsv;
+			this.rgb = parsedValue.rgb;
+			this.isValidColor = true;
+			return;
+		}
+		this.isValidColor = false;
+	}
 }

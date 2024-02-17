@@ -2,62 +2,78 @@
 	import ColorIcon from './ColorIcon/ColorIcon.svelte';
 	import FidgetIcon from './FidgetIcon/FidgetIcon.svelte';
 	import Slider from './../Slider/Slider.svelte';
+	import FidgetChoiceMenu from './FidgetChoiceMenu.svelte';
+	import ColorChoiceMenu from './ColorChoiceMenu.svelte';
 	import { zoom } from '$stores/camera';
+	import { currentFidgetName } from '$stores/material';
 
 	let zoombarOpen = false;
-
-	const onZoomBarChange = (e) => {
-		console.log(e.currentTarget.value);
-		zoom.setFromValue(Number(e.currentTarget.value));
-	};
-
-	$: console.log($zoom);
+	let choosingFidget = false;
+	let choosingColor = false;
+	const onZoomBarChange = (e) => zoom.setFromValue(Number(e.currentTarget.value));
 </script>
 
-<div class="controls">
-	<div class="bg" />
-	<div class="colorIcon">
-		<ColorIcon />
-	</div>
-	<div class="fidgetIcon">
-		<FidgetIcon />
-	</div>
-	<div class="zoom">
-		<div
-			class="zoomBar"
-			style:transform={`translateX(${zoombarOpen ? 'calc(var(--ts) * 0.4)' : '200px'})`}
-		>
-			<div class="zoomIcons">
-				<i class="fa-solid fa-magnifying-glass-plus" />
-				<i class="fa-solid fa-magnifying-glass-minus" />
-			</div>
-			<Slider vertical value={$zoom} on:input={onZoomBarChange} min={1} max={99} step={5} />
+{#if choosingFidget}
+	<FidgetChoiceMenu on:close={() => (choosingFidget = false)} />
+{:else if choosingColor}
+	<ColorChoiceMenu on:close={() => (choosingColor = false)} />
+{:else}
+	<div class="controls">
+		<div class="bg" />
+		<div class="colorIcon" on:click={() => (choosingColor = true)}>
+			<ColorIcon />
 		</div>
-		<button
-			class="zoomButton"
-			style:transform={`translateX(${!zoombarOpen ? '8px' : '-8px'})`}
-			on:click={() => (zoombarOpen = !zoombarOpen)}
-			><i class="fa-solid fa-magnifying-glass-minus" /></button
-		>
+		<div class="fidgetIcon">
+			<FidgetIcon icon={$currentFidgetName} on:click={() => (choosingFidget = true)} />
+		</div>
+		<div class="zoom">
+			<div
+				class="zoomBar"
+				style:transform={`translateX(${zoombarOpen ? 'calc(var(--ts) * 0.4)' : '210px'})`}
+			>
+				<div class="zoomIcons">
+					<i class="fa-solid fa-magnifying-glass-plus" />
+					<i class="fa-solid fa-magnifying-glass-minus" />
+				</div>
+				<Slider vertical value={$zoom} on:input={onZoomBarChange} min={1} max={99} step={5} />
+			</div>
+			<button
+				class="zoomButton"
+				style:transform={`translateX(${!zoombarOpen ? '8px' : '-8px'})`}
+				on:click={() => (zoombarOpen = !zoombarOpen)}
+				><i class="fa-solid fa-magnifying-glass-minus" /></button
+			>
+		</div>
 	</div>
-</div>
+{/if}
 
 <style type="postcss">
 	.controls {
-		width: 100%;
+		width: 100vw;
 		height: 100%;
 		position: absolute;
 		top: 0;
 		left: 0;
 		display: grid;
-		grid-template-columns: 200px 200px 1fr;
-		grid-template-rows: 1fr 5px 200px;
-		grid-template-areas: '. . .' '. . .' 'color fidget zoom';
+		grid-template-columns: 10px 35vw 25vw 1fr 80px 10px;
+		grid-template-rows: 1fr 10px 35vw 10px;
+		grid-template-areas:
+			'. . . . . .'
+			'. . . . . .'
+			'. color fidget . zoom .'
+			'. . . . . .';
 		pointer-events: none;
 	}
 
 	.controls > * {
 		pointer-events: auto;
+	}
+
+	.bg {
+		background-color: hsla(1, 100%, 0%, 0.2);
+		grid-column: 1/ -2;
+		grid-row: -4 / -1;
+		border-radius: 0 80px 30px 0;
 	}
 
 	.colorIcon {
@@ -68,8 +84,10 @@
 
 	.fidgetIcon {
 		grid-area: fidget;
-		width: 100%;
-		height: 100%;
+		width: 25vw;
+		height: 25vw;
+		align-self: end;
+		margin-left: 20px;
 	}
 
 	.zoom {
@@ -91,6 +109,11 @@
 		justify-content: center;
 		padding-right: 30px;
 		padding-bottom: 20px;
+		pointer-events: none;
+	}
+
+	.zoom > * {
+		pointer-events: auto;
 	}
 
 	.zoomBar {

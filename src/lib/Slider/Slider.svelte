@@ -12,7 +12,6 @@
 <input
 	class={`slider ${vertical ? 'vertical' : ''}`}
 	type="range"
-	style:--progress={progress}
 	{step}
 	{value}
 	{min}

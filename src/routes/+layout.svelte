@@ -20,7 +20,7 @@
 						<i class="fab fa-facebook-f" />
 					</a>
 				</li>
-				<li class="socialItem">
+				<!-- <li class="socialItem">
 					<a href="#" class="socialLink">
 						<i class="fab fa-twitter" />
 					</a>
@@ -39,7 +39,7 @@
 					<a href="#" class="socialLink">
 						<i class="fab fa-patreon" />
 					</a>
-				</li>
+				</li> -->
 			</ul>
 		</li>
 	</ul>

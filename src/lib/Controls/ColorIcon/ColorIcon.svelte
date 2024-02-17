@@ -4,27 +4,33 @@
 	export let metalness = 0.5;
 	export let width = '100%',
 		height = '100%';
-
-	let vals = hexColor.toString()?.match(/[\dA-Fa-f]/g) || [];
-	let digits =
-		vals.length >= 6
-			? vals.slice(0, 6)
-			: vals.length === 3
-			? [...vals, ...vals]
-			: 'ffffff'.split('');
-
-	const color = `#${digits.join('')}`;
-
-	const intVal = Number(`0x${digits.join('')}`); //Turns into an actual number
-	//TODO: When color is too dark, turn border white, otherwise black;
+	let color = '#ffaa22';
 
 	const outlineColor = '#ffffff';
 	const innerOutlineColor = '#000000';
 
+	$: color = parseColor(hexColor);
+
 	const onClick = () => {
-		glossiness = 0.1;
-		metalness = 0.1;
+		//@Todo: Remove this function this is just to test animation of transition
+		// glossiness = 0.1;
+		// metalness = 0.1;
 	};
+
+	function parseColor(hColor = 'ffaa22') {
+		let vals = hColor.toString()?.match(/[\dA-Fa-f]/g) || [];
+		let digits =
+			vals.length >= 6
+				? vals.slice(0, 6)
+				: vals.length === 3
+				? [...vals, ...vals]
+				: 'ffffff'.split('');
+
+		const intVal = Number(`0x${digits.join('')}`); //Turns into an actual number
+		//TODO: When color is too dark, turn border white, otherwise black;
+
+		return `#${digits.join('')}`;
+	}
 </script>
 
 <div
@@ -106,7 +112,7 @@
 			grey var(--mpoint) 180deg,
 			transparent 180deg
 		);
-		transition: --mpoint 0.5s;
+		/* transition: --mpoint 0.5s; */
 	}
 
 	.glossiness {
@@ -120,8 +126,9 @@
 			var(--color) 180deg var(--gpoint),
 			transparent var(--gpoint)
 		);
+
 		filter: brightness(1.05);
-		transition: --gpoint 0.5s;
+		/* transition: --gpoint 0.5s; */
 	}
 
 	.color {
