@@ -32,32 +32,59 @@
 		Do you want to auto increment
 		How do we handle rounding the horn?
 	*/
-
-	/**Elements for Scroll binding*/
-	/**Horizontal*/
+	/**Horizontal scrolling container for content*/
 	let scrollElemHor: HTMLElement | null = null;
-	let scrollbarElemHor: HTMLElement | null = null;
-	let scrollMarkerElemHor: HTMLElement | null = null;
-	let scrollbarWidthHor = -1;
-	let scrollWidthHor = -1;
-	let scrollMarkerWidthHor = -1;
-	let scrollLeftEdgeHor = -1;
-	let scrollBarLeftEdgeHor = -1;
-	// Vertical
+	/**Vertical scrolling container for items*/
 	let scrollElemVert: HTMLElement | null = null;
-	let scrollbarElemVert: HTMLElement | null = null;
-	let scrollMarkerElemVert: HTMLElement | null = null;
-	let scrollbarWidthVert = -1;
-	let scrollWidthVert = -1;
-	let scrollMarkerWidthVert = -1;
-	let scrollLeftEdgeVert = -1;
-	let scrollBarLeftEdgeVert = -1;
+	/**Stylized thumb for horizontal track.
+	 * We track if we are in vertical or horizontal position by
+	 * weather or not this is visible*/
+	let scrollMarkerElemHor: HTMLElement | null = null;
+	let scrollBarHor: HTMLElement | null = null;
+	let scrollBarVert: HTMLElement | null = null;
 
-	//Behavior controls
+	/**caches the height of the vertical scroll track*/
+	let scrollVerticalHeight = 0;
+	/**caches the width of the horizontal scroll track*/
+	let scrollHorizontalWidth = 0;
+	/**Caches the leftmost point of the horizontal scroll track*/
+	let scrollHorizontalLeft = 0;
+	/**Caches the topmost point of the vertical scroll track*/
+	let scrollVerticalTop = 0;
+	/**Caches the visible distance of horizontal track with page offset*/
+	let scrollHorizontalLength = 0;
+	/**Caches the visible distance of vertical track with page offset*/
+	let scrollVerticalLength = 0;
+	/**Caches the visible distance of horizontal scroll track with page offset*/
+	let scrollHorizontalBarLength = 0;
+	/**Caches the visible distance of vertical scroll track with page offset*/
+	let scrollVerticalBarLength = 0;
+	/**Caches Offset of Visible Horizontal Scrollbar*/
+	let scrollHorizontalBarLeft = 0;
+	/**Caches Offset of Visible Vertical Scrollbar*/
+	let scrollVerticalBarTop = 0;
+
+	/**Used for event throttling*/
 	let timer: number | null = null;
+	/**Use to filter scroll events until mouse or touch is released*/
 	let isMouseDown = false;
+	/**Used for event throttling*/
 	let isScrolling = false;
+	/**Used to filter scroll events*/
 	let activeScrollSource: ScrollEventType = null;
+	/**Location of horizontal and vertical markers in %*/
+	let percent = 100;
+	/**Screen X axis to track movement when moving via touch*/
+	let screenX = 0;
+	/**Screen Y axis to track movement when moving via touch*/
+	let screenY = 0;
+
+	/**Keeps track of which scrollbar is visible*/
+	let scrollDirection: 'vertical' | 'horizontal' = 'vertical'; //tells us if the scrollbar ir vertical scrollbar is active
+	const getActiveScrollPosition = () =>
+		scrollMarkerElemHor?.clientWidth && scrollMarkerElemHor?.clientWidth > 0
+			? 'horizontal'
+			: 'vertical';
 
 	type ScrollEventType =
 		| 'scroll'
@@ -65,198 +92,101 @@
 		| 'wheel'
 		| 'touch'
 		| 'scrollbar'
+		| 'scroll-button'
 		| 'marker-mouse'
 		| 'scroll-touch'
 		| 'marker-touch'
 		| null;
 
-	/**Scrolling record for container*/
-	let scrollX = 0;
-	let touchX = 0;
-	/**location of the drag marker*/
-	let scrollMarkerX = 0;
-	let markerTouchX = 0;
-
 	/**Event handler Functions*/
+	const clamp = (n: number, max: number, min: number) => (n > max ? max : n < min ? min : n);
 
-	function activateMouseDown() {
-		isMouseDown = true;
+	function onScrollEvent() {
+		/**Used to move scroll when middle mouse button is used to scroll a container*/
+		if (activeScrollSource !== 'scroll-button' || !isMouseDown) return;
+		let newPoint =
+			scrollDirection === 'horizontal'
+				? scrollElemHor?.scrollLeft | 1
+				: scrollElemVert?.scrollTop | 1;
+		let scrollLength =
+			scrollDirection === 'horizontal' ? scrollHorizontalLength : scrollVerticalLength;
+
+		let p = newPoint / scrollLength;
+		percent = clamp(p * 100, 100, 0);
 	}
-
-	function resetMouse() {
-		isMouseDown = false;
+	function onClickEvent() {
+		/**Used to detect if the middle mouse button was pressed in order to engage scrolling movement behavior*/
+		if (event.which === 2) {
+			activeScrollSource = 'scroll-button';
+			isMouseDown = true;
+			lockScrollTimer();
+		}
 	}
-
-	function onScrollHorizontal(newScrollX: number) {
-		//Only using if we just did a swipe scroll getsture
-		if (activeScrollSource !== 'scroll-touch' || !isScrolling) return;
-		const newMarkerX = calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor);
-		updateScrollValues({
-			scrollX: newScrollX,
-			markerX: clampMarkerX(newMarkerX)
-		});
-	}
-
-	function onScrollVertical(newScrollX: number) {
-		//Only using if we just did a swipe scroll getsture
-		if (activeScrollSource !== 'scroll-touch' || !isScrolling) return;
-		const newMarkerX = calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor);
-		updateScrollValues({
-			scrollX: newScrollX,
-			markerX: clampMarkerX(newMarkerX)
-		});
-	}
-
-	function onWheelHorizontal(movementX: number) {
+	function onWheelEvent(diff: number) {
 		activeScrollSource = 'wheel';
-		const offset = (scrollWidthHor / 6) * (movementX > 0 ? 1 : -1);
-		const newScrollX = scrollX + offset;
-		const newMarkerX = calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: clampMarkerX(newMarkerX),
-			moveScroll: true
-		});
-		lockScrollTimer(10);
+		let d = diff < 0 ? -10 : 10;
+		let p = percent + d;
+		percent = clamp(p, 100, 0);
+		updateScroll();
+		lockScrollTimer(500);
 	}
-
-	function onWheelVertical(movementX: number) {
-		activeScrollSource = 'wheel';
-		const offset = (scrollWidthHor / 6) * (movementX > 0 ? 1 : -1);
-		const newScrollX = scrollX + offset;
-		const newMarkerX = calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: clampMarkerX(newMarkerX),
-			moveScroll: true
-		});
-		lockScrollTimer(10);
-	}
-
-	function onButtonHorizontal(type: 'prev' | 'next') {
+	function onButtonEvent(type: 'prev' | 'next') {
 		activeScrollSource = 'button';
-		let newScrollX = null;
-		if (type === 'next') newScrollX = scrollX + scrollWidthHor / 3;
-		if (type === 'prev') newScrollX = scrollX - scrollWidthHor / 3;
-		if (newScrollX === null) return;
-		const newMarkerX = calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: clampMarkerX(newMarkerX),
-			moveScroll: true
-		});
+		let d = type === 'prev' ? -20 : 20;
+		let p = percent + d;
+		percent = clamp(p, 100, 0);
+		updateScroll();
 		lockScrollTimer(500);
 	}
-
-	function onButtonVertical(type: 'prev' | 'next') {
-		activeScrollSource = 'button';
-		let newScrollX = null;
-		if (type === 'next') newScrollX = scrollX + scrollWidthHor / 3;
-		if (type === 'prev') newScrollX = scrollX - scrollWidthHor / 3;
-		if (newScrollX === null) return;
-		const newMarkerX = calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: clampMarkerX(newMarkerX),
-			moveScroll: true
-		});
-		lockScrollTimer(500);
-	}
-
-	function onScrollbarClickHorizontal(newMarkerX: number) {
-		if (isScrollingLocked()) return;
-		activeScrollSource = 'scrollbar';
-		const newScrollX = calcRatioValue(newMarkerX, scrollbarWidthHor, scrollWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: newMarkerX,
-			moveScroll: true
-		});
-		lockScrollTimer(500);
-	}
-
-	function onScrollbarClickVertical(newMarkerX: number) {
-		if (isScrollingLocked()) return;
-		activeScrollSource = 'scrollbar';
-		const newScrollX = calcRatioValue(newMarkerX, scrollbarWidthHor, scrollWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: newMarkerX,
-			moveScroll: true
-		});
-		lockScrollTimer(500);
-	}
-
-	function onMarkerClickHorizontal(movementX: number) {
-		if (!isMouseDown) return;
+	function onMarkerEvent(pointX: number, pointY: number) {
+		let newPoint = scrollDirection === 'horizontal' ? pointX : pointY;
+		let scrollPageOffset =
+			scrollDirection === 'horizontal' ? scrollHorizontalBarLeft : scrollVerticalBarTop;
+		let scrollElemLength =
+			scrollDirection === 'horizontal' ? scrollHorizontalBarLength : scrollVerticalBarLength;
+		let n = newPoint - scrollPageOffset;
+		let p = (n / scrollElemLength) * 100;
+		percent = clamp(p, 100, 0);
 		activeScrollSource = 'marker-mouse';
-		const newMarkerX = scrollMarkerX + movementX;
-		const newScrollX = calcRatioValue(newMarkerX, scrollbarWidthHor, scrollWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: clampMarkerX(newMarkerX),
-			moveScroll: true
-		});
+		updateScroll('instant');
 		lockScrollTimer(1000);
 	}
-
-	function onMarkerClickVertical(movementX: number) {
-		if (!isMouseDown) return;
-		activeScrollSource = 'marker-mouse';
-		const newMarkerX = scrollMarkerX + movementX;
-		const newScrollX = calcRatioValue(newMarkerX, scrollbarWidthHor, scrollWidthHor);
-		updateScrollValues({
-			scrollX: clampScrollX(newScrollX),
-			markerX: clampMarkerX(newMarkerX),
-			moveScroll: true
-		});
-		lockScrollTimer(1000);
-	}
-
-	function onContainerSwipeHorizontal(newScrollLeft: number) {
-		let newScrollX = newScrollLeft;
-		const newMarkerX = clampMarkerX(calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor));
-		newScrollX = clampScrollX(newScrollX);
-		touchX = newScrollX;
-		markerTouchX = newMarkerX;
-		updateScrollValues({ scrollX: newScrollX, markerX: newMarkerX });
-		lockScrollTimer(1000);
-		activeScrollSource = 'scroll-touch';
-	}
-
-	function onContainerSwipeVertical(newScrollLeft: number) {
-		let newScrollX = newScrollLeft;
-		const newMarkerX = clampMarkerX(calcRatioValue(newScrollX, scrollWidthHor, scrollbarWidthHor));
-		newScrollX = clampScrollX(newScrollX);
-		touchX = newScrollX;
-		markerTouchX = newMarkerX;
-		updateScrollValues({ scrollX: newScrollX, markerX: newMarkerX });
-		lockScrollTimer(1000);
-		activeScrollSource = 'scroll-touch';
-	}
-
-	function onMarkerSwipeHorizontal(touchClientX: number) {
+	function onTouchEvent(touch: Touch) {
+		/**@todo:add functionality for movement as well*/
 		activeScrollSource = 'marker-touch';
-		let newMarkerTouchX = touchClientX - scrollBarLeftEdgeHor;
-		const newScrollX = clampScrollX(
-			calcRatioValue(newMarkerTouchX, scrollbarWidthHor, scrollWidthHor)
-		);
-		newMarkerTouchX = clampMarkerX(newMarkerTouchX);
-		markerTouchX = newMarkerTouchX;
-		updateScrollValues({ scrollX: newScrollX, markerX: newMarkerTouchX, moveScroll: true });
+		let newPoint = scrollDirection === 'horizontal' ? touch.clientX : touch.clientY;
+		let scrollPageOffset =
+			scrollDirection === 'horizontal' ? scrollHorizontalLeft : scrollVerticalTop;
+		let scrollElemLength =
+			scrollDirection === 'horizontal' ? scrollHorizontalWidth : scrollVerticalHeight;
+		let a = clamp(newPoint, scrollPageOffset + scrollElemLength, scrollPageOffset);
+		let b = a - scrollPageOffset;
+		let c = scrollElemLength;
+		let p = (b / c) * 100;
+		percent = clamp(p, 100, 0);
+		updateScroll('instant');
 		lockScrollTimer();
 	}
-
-	function onMarkerSwipeVertical(touchClientX: number) {
-		activeScrollSource = 'marker-touch';
-		let newMarkerTouchX = touchClientX - scrollBarLeftEdgeHor;
-		const newScrollX = clampScrollX(
-			calcRatioValue(newMarkerTouchX, scrollbarWidthHor, scrollWidthHor)
-		);
-		newMarkerTouchX = clampMarkerX(newMarkerTouchX);
-		markerTouchX = newMarkerTouchX;
-		updateScrollValues({ scrollX: newScrollX, markerX: newMarkerTouchX, moveScroll: true });
-		lockScrollTimer();
+	function onTouchMoveEvent(touchX: any, touchY: any) {
+		/**@todo: Math is off when swiping*/
+		let newTouch = scrollDirection === 'horizontal' ? touchX : touchY;
+		let oldTouch = scrollDirection === 'horizontal' ? screenX : screenY;
+		let scrollLength =
+			scrollDirection === 'horizontal' ? scrollHorizontalWidth : scrollVerticalHeight;
+		let currentScroll = (scrollLength * percent) / 100;
+		let movement = oldTouch - newTouch;
+		let newScroll = currentScroll + movement;
+		percent = (newScroll / scrollLength) * 100;
+		console.log(`
+		newTouch: ${newTouch}
+		oldTouch: ${oldTouch}
+		scrollLength: ${scrollLength}
+		currentScroll: ${currentScroll}
+		movement: ${movement}
+		newScroll: ${newScroll}
+		percent: ${percent}
+		`);
+		updateScroll();
 	}
 
 	function lockScrollTimer(milliseconds = 250) {
@@ -274,58 +204,68 @@
 		return isScrolling && type !== activeScrollSource;
 	}
 
-	function clampScrollX(x: number) {
-		return x < 0 ? 0 : x > scrollWidthHor ? scrollWidthHor : x;
-	}
-	function clampMarkerX(x: number) {
-		return x < 0 ? 0 : x > scrollbarWidthHor ? scrollbarWidthHor - scrollMarkerWidthHor : x;
-	}
-	function calcRatioValue(enumerator: number, denominator: number, testValue: number) {
-		return testValue * (enumerator / denominator);
-	}
-
-	function updateScrollValues({
-		scrollX: newScrollX = -1,
-		markerX: newMarkerX = -1,
-		moveScroll = false
-	}: {
-		scrollX?: number;
-		markerX?: number;
-		moveScroll?: boolean;
-	}) {
-		if (newMarkerX < 0 && newScrollX < 0) return;
-		isScrolling = true;
-		if (newMarkerX >= 0) scrollMarkerX = newMarkerX;
-		if (newScrollX >= 0) scrollX = newScrollX;
-		if (newScrollX >= 0 && moveScroll)
-			scrollElemHor?.scrollTo({ left: newScrollX, behavior: 'smooth' });
+	function updateScroll(mode: 'smooth' | 'instant' = 'smooth') {
+		if (scrollDirection === 'horizontal')
+			scrollElemHor?.scrollTo({
+				left: ((scrollElemHor.scrollWidth - scrollElemHor.clientWidth) * percent) / 100,
+				behavior: mode
+			});
+		else
+			scrollElemVert?.scrollTo({
+				top: ((scrollElemVert.scrollHeight - scrollElemVert.clientHeight) * percent) / 100,
+				behavior: mode
+			});
 	}
 
 	function onResize() {
-		scrollWidthHor = (scrollElemHor?.scrollWidth || -1) - (scrollElemHor?.clientWidth || -1);
-		scrollbarWidthHor = scrollbarElemHor?.clientWidth || -1;
-		scrollMarkerWidthHor = scrollMarkerElemHor?.clientWidth || -1;
-		scrollLeftEdgeHor = scrollElemHor?.getBoundingClientRect()?.left || -1;
-		scrollBarLeftEdgeHor = scrollbarElemHor?.getBoundingClientRect()?.left || -1;
-		scrollX = scrollElemHor?.scrollLeft || 0;
-		scrollMarkerX = calcRatioValue(scrollX, scrollWidthHor, scrollbarWidthHor);
+		//@todo Hide scroll if not needed. Bar just hangs there when full screen
+		//@todo When resizing updates sometimes jump to end of scroll, not where is should be
+		let wasVertical = scrollDirection === 'vertical';
+		scrollDirection = getActiveScrollPosition();
+		let nowVertical = scrollDirection === 'vertical';
+		/**Check if we are changing screensize from a small screen with vertical bar
+		 * to a large screen with a horizontal bar. in either case, we will update
+		 * the active scrolbar
+		 */
+		if ((!nowVertical && wasVertical) || (nowVertical && !wasVertical)) updateScroll('instant');
+
+		/**Cache scroll track lengths for calculating onScroll and marker drags*/
+		// scrollHorizontalWidth = (scrollElemHor?.scrollWidth || 0) - (scrollElemHor?.clientWidth || 0);
+		let { width = 0, left = 0 } = scrollElemHor?.getBoundingClientRect();
+		let { height = 0, top = 0 } = scrollElemVert?.getBoundingClientRect();
+		scrollHorizontalLeft = left;
+		scrollHorizontalWidth = width;
+		scrollVerticalHeight = height;
+		scrollVerticalTop = top;
+		scrollHorizontalLength = scrollElemHor?.scrollWidth - scrollHorizontalWidth;
+		scrollVerticalLength = scrollElemVert?.scrollHeight - scrollVerticalHeight;
+		/**Cache length of visible scrolling track when calculating scroll events and finger swipes on tracks*/
+		let { width: w = 0, left: l = 0 } = scrollBarHor?.getBoundingClientRect();
+		let { height: h = 0, top: t = 0 } = scrollBarVert?.getBoundingClientRect();
+		scrollHorizontalBarLeft = l;
+		scrollHorizontalBarLength = w;
+		scrollVerticalBarTop = t;
+		scrollVerticalBarLength = h;
 	}
 
 	/**Needed because elements do not get measured on first render;*/
 	setTimeout(onResize, 150);
 </script>
 
-<!--Maybe if media query works in svelte, make a + component in the row OR outside of it? -->
 <svelte:window
-	on:mouseup={resetMouse}
-	on:touchend={resetMouse}
+	on:mouseup={() => (isMouseDown = false)}
+	on:touchend={() => (isMouseDown = false)}
 	on:mousemove|preventDefault|stopPropagation={(e) => {
-		onMarkerClickHorizontal(e.movementX);
+		if (activeScrollSource === 'marker-mouse' && isMouseDown) onMarkerEvent(e.clientX, e.clientY);
 	}}
 	on:resize={onResize}
 />
-<div class="carousel" style:--marker-size={'40px'} style:--marker-pos={`${scrollMarkerX}px`}>
-	<button class="nav-button nav-prev" on:click={() => onButtonHorizontal('prev')}>
+<div
+	class="carousel"
+	style:--marker-size={'40px'}
+	on:wheel|preventDefault|stopPropagation={(e) => onWheelEvent(e.deltaY)}
+>
+	<button class="nav-button nav-prev" on:click={() => onButtonEvent('prev')}>
 		<slot name="prevButtonContent">
 			<Icon class="fa-solid fa-angle-left" />
 		</slot>
@@ -335,67 +275,105 @@
 	<div
 		class="content"
 		bind:this={scrollElemHor}
-		on:wheel|preventDefault|stopPropagation={(e) => onWheelHorizontal(e.deltaY)}
-		on:scroll|preventDefault|stopPropagation={() =>
-			onScrollHorizontal(scrollElemHor?.scrollLeft || 0)}
-		on:touchmove={() => onScrollbarClickHorizontal(scrollElemHor?.scrollLeft || 0)}
+		on:touchstart={(e) => {
+			isMouseDown = true;
+			onTouchEvent(e.touches[0]);
+		}}
+		on:mousedown={() => onClickEvent()}
+		on:mouseup={(e) => {
+			isMouseDown = false;
+		}}
+		on:touchmove|preventDefault|stopPropagation={(e) =>
+			onTouchMoveEvent(e.touches[0].screenX, e.touches[0].screenY)}
+		on:scroll|preventDefault|stopPropagation={() => onScrollEvent()}
 	>
-		<!-- If statement doesn't work, items are sent in as a fragment, which cannot be contained -->
-		<!-- {#if $$slots.container}
-			<slot name="container">
-				<slot name="items" />
-			</slot>
-		{:else} -->
-		<div class="items"><slot name="items" /></div>
-		<!-- {/if} -->
+		<!-- on:touchmove|preventDefault|stopPropagation={(e) => onTouchEvent(e.touches[0])} -->
+		<div
+			class="items"
+			bind:this={scrollElemVert}
+			on:touchstart={(e) => {
+				isMouseDown = true;
+				onTouchEvent(e.touches[0]);
+			}}
+			on:scroll|preventDefault|stopPropagation={(e) => onScrollEvent(e)}
+			on:mousedown={() => onClickEvent()}
+			on:mouseup={(e) => {
+				isMouseDown = false;
+			}}
+		>
+			<slot name="items" />
+		</div>
 	</div>
 	<slot name="nextButton">
-		<button class="nav-button nav-next" on:click={() => onButtonHorizontal('next')}
+		<button class="nav-button nav-next" on:click={() => onButtonEvent('next')}
 			><Icon class="fa-solid fa-angle-right" /></button
 		>
 	</slot>
 	<div
 		class="scroll-bar"
-		bind:this={scrollbarElemHor}
 		on:mousedown={(e) => {
-			onContainerSwipeHorizontal(e.offsetX);
+			if ((e?.target?.className || '').indexOf('scroll-bar') > -1) {
+				isMouseDown = true;
+				// onScrollbarEvent(e.offsetX, scrollBarHor?.clientWidth || 1);
+				onMarkerEvent(e.clientX, e.clientY);
+			}
 		}}
+		on:touchstart={(e) => {
+			isMouseDown = true;
+			onTouchEvent(e.touches[0]);
+		}}
+		on:touchmove|preventDefault|stopPropagation={(e) => onTouchEvent(e.touches[0])}
+		bind:this={scrollBarHor}
 	>
 		<slot name="scrollMarker">
 			<span
 				id="scroll-marker"
-				class="scroll-indicator"
+				class="scroll-indicator-horizontal"
+				style:--percent={`${percent}%`}
 				bind:this={scrollMarkerElemHor}
 				on:mousedown={(e) => {
-					activateMouseDown();
-					onMarkerClickHorizontal(e.movementX);
+					isMouseDown = true;
+					onMarkerEvent(e.clientX, e.clientY);
 				}}
 				on:touchstart={(e) => {
-					activateMouseDown();
-					onMarkerSwipeHorizontal(e.touches[0].clientX);
+					isMouseDown = true;
+					onTouchEvent(e.touches[0]);
 				}}
-				on:touchmove|preventDefault|stopPropagation={(e) =>
-					onMarkerSwipeHorizontal(e.touches[0].clientX)}
+				on:touchmove|preventDefault|stopPropagation={(e) => onTouchEvent(e.touches[0])}
 			/>
 		</slot>
 	</div>
-	<div class="scroll-bar-vertical">
-		<slot name="scrollMarkerVertical">
-			<span id="scroll-marker-vertical" class="scroll-indicator-vertical" />
-			<!-- dfsdfsdfsdfsddf -->
-			<!-- bind:this={scrollMarkerElemVertical}
+	<div
+		class="scroll-bar-vertical"
+		bind:this={scrollBarVert}
 		on:mousedown={(e) => {
-			scrollEventHandlers.activate();
-			scrollEventHandlers.marker(e.movementX);
+			if ((e?.target?.className || '').indexOf('scroll-bar-vertical') > -1) {
+				// onScrollbarEvent(e.offsetY, scrollBarVert?.clientHeight || 1);
+				isMouseDown = true;
+				onMarkerEvent(e.clientX, e.clientY);
+			}
 		}}
 		on:touchstart={(e) => {
-			scrollEventHandlers.activate();
-			scrollEventHandlers.markerTouchSwipe(e.touches[0].clientX);
+			isMouseDown = true;
+			onTouchEvent(e.touches[0]);
 		}}
-		on:touchmove|preventDefault|stopPropagation={(e) =>
-			scrollEventHandlers.markerTouchSwipe(e.touches[0].clientX)} -->
-
-			<!-- dsgsdgsdg -->
+		on:touchmove|preventDefault|stopPropagation={(e) => onTouchEvent(e.touches[0])}
+	>
+		<slot name="scrollMarkerVertical">
+			<span
+				id="scroll-marker-vertical"
+				class="scroll-indicator-vertical"
+				style:--percent={`${percent}%`}
+				on:mousedown={(e) => {
+					isMouseDown = true;
+					onMarkerEvent(e.clientX, e.clientY);
+				}}
+				on:touchstart={(e) => {
+					isMouseDown = true;
+					onTouchEvent(e.touches[0]);
+				}}
+				on:touchmove|preventDefault|stopPropagation={(e) => onTouchEvent(e.touches[0])}
+			/>
 		</slot>
 	</div>
 </div>
@@ -456,8 +434,6 @@
 		flex-direction: column;
 		width: 100%;
 		height: 100%;
-		/* height: 80%; */
-		/*TODO: This needs to be 80% or the add button will be clipped. Why???*/
 		overflow-y: scroll;
 
 		@media (--md) {
@@ -516,7 +492,7 @@
 			display: block;
 			background-color: var(--control-color-bg);
 			height: 50%;
-			width: 110%;
+			width: 100%;
 			border-radius: 20px;
 			position: absolute;
 			top: 50%;
@@ -525,7 +501,7 @@
 			pointer-events: none;
 		}
 	}
-	.scroll-indicator {
+	.scroll-indicator-horizontal {
 		display: none;
 		@media (--md) {
 			display: block;
@@ -533,7 +509,11 @@
 			height: var(--marker-size, 40px);
 			background-color: var(--control-color-accent);
 			border-radius: 100%;
-			transform: translateX(var(--marker-pos));
+			position: absolute;
+			top: 50%;
+			margin-left: var(--percent, 0%);
+			transform: translate(-50%, -50%);
+			/* transition: margin-left 0.3s; */
 		}
 	}
 
@@ -560,12 +540,16 @@
 	}
 
 	.scroll-indicator-vertical {
-		display: block;
+		display: inline-block;
 		width: var(--marker-size, 40px);
 		height: var(--marker-size, 40px);
 		background-color: var(--control-color-accent);
 		border-radius: 100%;
-		transform: translateY(var(--marker-pos));
+		position: absolute;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		/* clamp needed to prevent translated absolute element from clipping off edges */
+		top: clamp(5%, var(--percent), 95%);
 	}
 
 	@media (--md) {

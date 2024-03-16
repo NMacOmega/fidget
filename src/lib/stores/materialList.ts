@@ -11,7 +11,7 @@ type MaterialOption = {
 export const materialOptionsList = (function(){
 	const defaultOptions: MaterialOption[] = [
 		{ color: new Color('ff0000'), metalness: 0.7, glossiness: 0.2, opacity: 1 },
-		{ color: new Color('00ff00'), metalness: 1, glossiness: 0, opacity: 1 },
+		{ color: new Color('ee66ee'), metalness: 1, glossiness: 0, opacity: 1 },
 		{ color: new Color('0000ff'), metalness: 0, glossiness: 0.7, opacity: 1 }
 	];
 
