@@ -1,17 +1,11 @@
 <script>
-	import {
-		selectedUUIDColor,
-		selectedUUIDMetalness,
-		selectedUUIDGlossiness,
-		selectedUUIDOpacity
-	} from '$stores/material';
-	import { metalness, opacity, glossiness } from '$stores/material';
+	import { metalness, opacity, glossiness, defaultMaterial } from '$stores/material';
 	import { hex } from '$stores/colorStores';
 	import { materialOptionsList } from '$stores/materialList';
 	import { createEventDispatcher } from 'svelte';
-	import ColorIcon from './ColorIcon/ColorIcon.svelte';
+	import ColorIcon from '../ColorIcon/ColorIcon.svelte';
 	import Carousel from '@comps/Carousel/Carousel.svelte';
-	import ColorSetControls from './ColorSetControls.svelte';
+	import ColorSetControls from '../ColorSetControls.svelte';
 	import { Color } from '$lib/colorFunctions';
 	const dispatch = createEventDispatcher();
 
@@ -26,40 +20,23 @@
 		glossiness: 1,
 		opacity: 1
 	};
-	let editControlParams = { ...defaultEditControlParams };
-
-	// materialOptionsList.add({
-	// 	color: 'ffffff',
-	// 	metalness: 0,
-	// 	glossiness: 0.8
-	// });
+	let editControlParams = {};
 
 	let options = [];
-	let optionsSelection = {
-		color: new Color('000000'),
-		metalness: 0.5,
-		glossiness: 0.5,
-		opacity: 1
-	};
-
-	$: options = [
-		{
-			color: $selectedUUIDColor,
-			metalness: $selectedUUIDMetalness,
-			glossiness: $selectedUUIDGlossiness,
-			opacity: $selectedUUIDOpacity
-		},
-		...$materialOptionsList
-	];
-
+	$: options = [$defaultMaterial, ...$materialOptionsList];
 	$: optionsSelection = options[currentChoiceIndex];
 
 	const applyOption = (color, m, g, o, i) => {
 		if ($hex === color && $metalness === m && $glossiness === g && $opacity === o) return;
-		hex.set(color);
-		metalness.set(m);
-		glossiness.set(g);
-		//opacity.set(o);
+		console.log(`
+		m ${m}
+		o ${o}
+		g ${g}
+		`);
+		hex.set(color.hex);
+		metalness.set(m * 100);
+		glossiness.set(g * 100);
+		opacity.set(o * 100);
 		currentChoiceIndex = i;
 	};
 
@@ -77,7 +54,7 @@
 		console.log(color);
 		editControlParams = {
 			...editControlParams,
-			color: { ...color },
+			color,
 			metalness,
 			glossiness,
 			opacity
@@ -104,15 +81,36 @@
 			...params
 		});
 	};
+
+	const onOptionAdd = (newOption) => {
+		materialOptionsList.add(newOption);
+	};
+
+	const onWindowClick = (objectClassName) => {
+		if (objectClassName.includes('canvas')) dispatch('close');
+	};
 </script>
+
+<svelte:window
+	on:touchend={(e) => onWindowClick(e.target?.className || '')}
+	on:mousedown={(e) => {
+		onWindowClick(e.target?.className);
+	}}
+/>
 
 {#if editingColor}
 	<ColorSetControls
 		{...editControlParams}
 		type={!editingObject ? 'icon' : ''}
 		on:save={onSaveOption}
-		on:change={(e) => onOptionChange(currentEditIndex - 1, e.detail)}
-		on:close={() => (editingColor = false)}
+		on:change={(e) => {
+			if (!addingColor) onOptionChange(currentEditIndex - 1, e.detail);
+		}}
+		on:close={(e) => {
+			if (addingColor) onOptionAdd(e.detail);
+			editingColor = false;
+			addingColor = false;
+		}}
 	/>
 {:else}
 	<Carousel>
@@ -269,6 +267,7 @@
 		left: 50%;
 		top: 50%;
 		transform: translate(-50%, -50%);
+		z-index: -1;
 	}
 
 	@media (--md) {

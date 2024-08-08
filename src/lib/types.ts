@@ -44,6 +44,10 @@ export type SceneHighlights = {
 	[key: string]: THREE.Mesh
 };
 
+export type SceneDefaultMaterials = {
+  [key:string]: THREE.MeshStandardMaterial
+};
+
 
 
 

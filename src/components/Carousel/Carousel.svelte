@@ -70,6 +70,8 @@
 	let isMouseDown = false;
 	/**Used for event throttling*/
 	let isScrolling = false;
+	/*Used to decide if scrolling should be visible. If all elements fit on the page, scrolling will not be offered */
+	let isScrollNeeded = true;
 	/**Used to filter scroll events*/
 	let activeScrollSource: ScrollEventType = null;
 	/**Location of horizontal and vertical markers in %*/
@@ -81,10 +83,7 @@
 
 	/**Keeps track of which scrollbar is visible*/
 	let scrollDirection: 'vertical' | 'horizontal' = 'vertical'; //tells us if the scrollbar ir vertical scrollbar is active
-	const getActiveScrollPosition = () =>
-		scrollMarkerElemHor?.clientWidth && scrollMarkerElemHor?.clientWidth > 0
-			? 'horizontal'
-			: 'vertical';
+	const getActiveScrollPosition = () => (scrollHorizontalLength > 0 ? 'horizontal' : 'vertical');
 
 	type ScrollEventType =
 		| 'scroll'
@@ -218,7 +217,6 @@
 	}
 
 	function onResize() {
-		//@todo Hide scroll if not needed. Bar just hangs there when full screen
 		//@todo When resizing updates sometimes jump to end of scroll, not where is should be
 		let wasVertical = scrollDirection === 'vertical';
 		scrollDirection = getActiveScrollPosition();
@@ -237,8 +235,10 @@
 		scrollHorizontalWidth = width;
 		scrollVerticalHeight = height;
 		scrollVerticalTop = top;
-		scrollHorizontalLength = scrollElemHor?.scrollWidth - scrollHorizontalWidth;
-		scrollVerticalLength = scrollElemVert?.scrollHeight - scrollVerticalHeight;
+		let scrollVisibleWidth = scrollElemHor?.scrollWidth | 0;
+		let scrollVisibleHeight = scrollElemVert?.scrollHeight | 0;
+		scrollHorizontalLength = scrollVisibleWidth - scrollHorizontalWidth;
+		scrollVerticalLength = scrollVisibleHeight - scrollVerticalHeight;
 		/**Cache length of visible scrolling track when calculating scroll events and finger swipes on tracks*/
 		let { width: w = 0, left: l = 0 } = scrollBarHor?.getBoundingClientRect();
 		let { height: h = 0, top: t = 0 } = scrollBarVert?.getBoundingClientRect();
@@ -246,6 +246,21 @@
 		scrollHorizontalBarLength = w;
 		scrollVerticalBarTop = t;
 		scrollVerticalBarLength = h;
+
+		if (scrollHorizontalLength <= 0 && scrollVerticalLength <= 0) isScrollNeeded = false;
+		else isScrollNeeded = true;
+
+		console.log(`${scrollHorizontalLength} ${scrollVerticalLength}`);
+
+		// console.log(`
+		// height: ${scrollVerticalHeight} < ${scrollVisibleHeight} = ${
+		// 	scrollVerticalHeight < scrollVisibleHeight
+		// }
+		// widgth: ${scrollHorizontalWidth} < ${scrollVisibleWidth} = ${
+		// 	scrollHorizontalWidth < scrollVisibleWidth
+		// }
+		// ${scrollDirection} = ${isScrollNeeded}
+		// `);
 	}
 
 	/**Needed because elements do not get measured on first render;*/
@@ -265,7 +280,11 @@
 	style:--marker-size={'40px'}
 	on:wheel|preventDefault|stopPropagation={(e) => onWheelEvent(e.deltaY)}
 >
-	<button class="nav-button nav-prev" on:click={() => onButtonEvent('prev')}>
+	<button
+		class="nav-button nav-prev"
+		style:display={isScrollNeeded ? 'block' : 'none'}
+		on:click={() => onButtonEvent('prev')}
+	>
 		<slot name="prevButtonContent">
 			<Icon class="fa-solid fa-angle-left" />
 		</slot>
@@ -305,12 +324,15 @@
 		</div>
 	</div>
 	<slot name="nextButton">
-		<button class="nav-button nav-next" on:click={() => onButtonEvent('next')}
-			><Icon class="fa-solid fa-angle-right" /></button
+		<button
+			class="nav-button nav-next"
+			style:display={isScrollNeeded ? 'block' : 'none'}
+			on:click={() => onButtonEvent('next')}><Icon class="fa-solid fa-angle-right" /></button
 		>
 	</slot>
 	<div
 		class="scroll-bar"
+		style:display={isScrollNeeded ? 'block' : 'none'}
 		on:mousedown={(e) => {
 			if ((e?.target?.className || '').indexOf('scroll-bar') > -1) {
 				isMouseDown = true;
@@ -346,6 +368,7 @@
 	<div
 		class="scroll-bar-vertical"
 		bind:this={scrollBarVert}
+		style:display={isScrollNeeded ? 'block' : 'none'}
 		on:mousedown={(e) => {
 			if ((e?.target?.className || '').indexOf('scroll-bar-vertical') > -1) {
 				// onScrollbarEvent(e.offsetY, scrollBarVert?.clientHeight || 1);

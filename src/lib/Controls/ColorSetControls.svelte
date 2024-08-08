@@ -40,7 +40,7 @@
 		metalness: number,
 		glossiness: number
 	) {
-		color = { ...newColor };
+		color = newColor;
 		flatColor = `hsl(${newColor.hsl.h}, 100%, 50%)`;
 		buttonColor = `#${newColor.hex}`;
 		buttonOutlineColor = newColor.hsl.s < 50 && color.hsl.l > 50 ? 'black' : 'white';
@@ -86,9 +86,9 @@
 
 	const onColorChange = (newColor: Color) => {
 		if (!newColor.isValidColor) return;
-		colorObj.set({ ...newColor });
+		colorObj.set(newColor);
 		dispatch('change', {
-			color: { ...newColor },
+			color: newColor,
 			metalness,
 			opacity,
 			glossiness
@@ -102,7 +102,7 @@
 		glossiness = g;
 		opacity = o;
 		dispatch('change', {
-			color: { ...color },
+			color,
 			metalness,
 			glossiness,
 			opacity
@@ -123,7 +123,7 @@
 		};
 		let newColor = new Color({ h: $colorObj.hsl.h, s: newSaturation, l: newLuminosity });
 		onColorChange(newColor);
-		colorObj.set({ ...newColor });
+		colorObj.set(newColor);
 	};
 
 	const activeTabStyle = 'color: black; background-color: white;';
@@ -134,6 +134,14 @@
 		if (isMouseCaptured) onAreaClick(e.clientX, e.clientY, colorArea.getBoundingClientRect());
 	}}
 	on:mouseup={() => (isMouseCaptured = false)}
+	on:touchmove={(e) => {
+		if (isMouseCaptured)
+			onAreaClick(
+				e.targetTouches[0].clientX,
+				e.targetTouches[0].clientY,
+				colorArea.getBoundingClientRect()
+			);
+	}}
 />
 <div class="container" style:--flatColor={flatColor}>
 	<input
@@ -174,8 +182,15 @@
 			on:click={() => (activeTab = 'material')}
 			style={activeTab === 'material' ? activeTabStyle : null}>Material</button
 		>
-		<button class="close" on:click={() => dispatch('close')}
-			><span class="close-text">DONE</span></button
+		<button
+			class="close"
+			on:click={() =>
+				dispatch('close', {
+					color,
+					metalness,
+					glossiness,
+					opacity
+				})}><span class="close-text">DONE</span></button
 		>
 	</div>
 	<div class="colorTab" style:--display={activeTab != 'color' ? 'none' : 'block'}>
@@ -186,14 +201,20 @@
 				max={360}
 				step={1}
 				bind:value={hueSliderVal}
-				on:input={(e) =>
-					onColorChange(new Color({ ...$colorObj.hsl, h: Number(e.currentTarget.value) }))}
+				on:input={(e) => {
+					onColorChange(new Color({ ...$colorObj.hsl, h: Number(e.currentTarget.value) }));
+				}}
+				on:mousedown={(e) => {
+					console.log(e);
+					onColorChange(new Color({ ...$colorObj.hsl, h: Number(e.currentTarget.value) }));
+				}}
 			/>
 		</div>
 		<div
 			class="colorGrid"
 			bind:this={colorArea}
 			on:click={(e) => onAreaClick(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())}
+			on:touchstart={() => (isMouseCaptured = true)}
 			on:mousedown={() => (isMouseCaptured = true)}
 			on:mouseup={() => (isMouseCaptured = false)}
 			on:touchend={() => (isMouseCaptured = false)}

@@ -2,12 +2,14 @@ import { readable, writable, derived, get } from 'svelte/store';
 import { readableWithInit } from './custom';
 import type {  MeshStandardMaterial, Vector2 } from 'three';
 import type { HEXColor } from '$lib/colorFunctions';
-import type { InteractionsMap, SceneObjects, SceneHighlights, THREEUUID } from '$types';
-
-
+import type { InteractionsMap, SceneObjects, SceneHighlights, SceneDefaultMaterials, THREEUUID } from '$types';
+import { colorStore } from './colorStores';
+import { Color } from '$lib/colorFunctions';
 
 /**An Mapped Store of THEEJS objects taken from a scene, mapped by UUID. Can only be written to once. See {@link https://threejs.org/docs/#api/en/core/Object3D.children Object3d.children}*/
 export const sceneObjects = readableWithInit<SceneObjects>({});
+/**A mapped store of THREEJS default Materials, mapped by UUID. Stores the defautl state of all visible materials */
+export const sceneDefaultMaterials = readableWithInit<SceneDefaultMaterials>({});
 /**An Mapped Store of THEEJS objects to highlight when the camera moves, mapped by UUID. Can only be written to once. See {@link https://threejs.org/docs/?q=object#api/en/core/Object3D Object3d}, {@link https://threejs.org/docs/?q=ob#api/en/core/Object3D.uuid UUID}*/
 export const sceneHighlights = readableWithInit(<SceneHighlights>{});
 
@@ -110,53 +112,41 @@ export const selectedUUID = (function () {
 		//We have a new object. Need rotation, etc...
 		material.transparent = true; //Needed to enable opacity setting
 		const { metalness: m, roughness: r, opacity: o, color: c } = material;
-		// const newColor = convert.hex.toColor(c.getHexString());
-		// if (newColor) {colorStore._set(newColor)
-		// UUIDColor.set(newColor.hex)};
 		/**Must upscale from material because app needs 0 <-> 100 */
 		opacityStore._set(o*100);
 		metalnessStore._set(m*100);
 		roughnessStore._set(r*100);
+		colorStore._setFromNewMaterial(c.getHexString());
 		setDirect(newUUID);
 	}
 	return { subscribe, set };
 })();
 
-/**Used to track the default hex color of the selected UUID Object. updated when UUID is changed. */
-const UUIDColor = (function (){
-		const {subscribe, set} = writable<HEXColor | ''>('');
-		return {subscribe, set};
-})();
-/**Used to track the default hex color of the selected UUID Object. updated when UUID is changed. */
-export const selectedUUIDColor = {subscribe: UUIDColor.subscribe};
+export const defaultMaterial = derived(selectedUUID, ($uuid)=>{
+	const defaultMaterial = get(sceneDefaultMaterials)[$uuid]
+	const metalness = defaultMaterial.metalness;
+	const roughness = defaultMaterial.roughness;
+	const opacity = defaultMaterial.opacity;
+	const hex = defaultMaterial.color;
+	if(metalness === undefined || roughness === undefined||opacity === undefined||hex === undefined) return {
+		metalness: 0.5,
+		roughness: 0.5,
+		opacity: 1,
+		color: new Color('ffffff')
+	}
+	else return {metalness, roughness, opacity, color: new Color(hex)}
+});
 
-/**Used to track the default metalness of the selected UUID Object. updated when UUID is changed. */
-const UUIDMetalness = (function (){
-	const {subscribe, set} = writable<number>(0);
-	return {subscribe, set};
-})();
-/**Used to track the default metalness of the selected UUID Object. updated when UUID is changed. */
-export const selectedUUIDMetalness = {subscribe: UUIDMetalness.subscribe};
 
-/**Used to track the default roughness of the selected UUID Object. updated when UUID is changed. */
-const UUIDRoughness = (function (){
-	const {subscribe, set} = writable<number>(0);
-	return {subscribe, set};
-})();
-/**Used to track the default roughness of the selected UUID Object. updated when UUID is changed. */
-export const selectedUUIDRoughness = {subscribe: UUIDRoughness.subscribe};
 
-/**Used to track the default opacity of the selected UUID Object. updated when UUID is changed. */
-const UUIDOpacity = (function (){
-	const {subscribe, set} = writable<number>(0);
-	return {subscribe, set};
-})();
-/**Used to track the default opacity of the selected UUID Object. updated when UUID is changed. */
-export const selectedUUIDOpacity = {subscribe: UUIDOpacity.subscribe};
 
-/**Used to track the default Glossiness of the selected UUID Object. updated when UUID is changed. */
-export const selectedUUIDGlossiness = derived(UUIDRoughness, (roughness)=> 1 - roughness);
-
+/** Private function for use only in {@link ColorStore}. Updates the material color to match the current selected color in ColorStore */
+export const _updateMaterialColorFromColorStore = (hexColor:HEXColor)=>{
+	const objectWithMaterial = getObjectWithMaterial(get(selectedUUID));
+	if(!objectWithMaterial) return;
+	//Add a # because THREEJS requires #ffffff notation;
+	objectWithMaterial.material.color.set(`#${hexColor}`);
+}
 
 const opacityStore = (function(){
 	const {subscribe, set:_set} = writable<number>(0);

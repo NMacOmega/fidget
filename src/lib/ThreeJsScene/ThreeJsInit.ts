@@ -4,10 +4,10 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 	import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 	import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment';
-    import { sceneObjects, canvas, scene as sceneStore, sceneHighlights, highlightFidget, interactions} from '$stores/material';
+    import { sceneObjects, sceneDefaultMaterials, canvas, scene as sceneStore, sceneHighlights, highlightFidget, interactions} from '$stores/material';
     import { camera as cameraStore, orbit as orbitStore, zoom as zoomStore } from '$stores/camera';
     import { animations } from '$stores/animation';
-    import type { SceneObjects, SceneHighlights} from '$types';
+    import type { SceneObjects, SceneHighlights, SceneDefaultMaterials} from '$types';
     
     //These global variables store theeJS elements needed across intialization, render, and animate
     let threeScene: THREE.Scene;
@@ -99,6 +99,7 @@
         const focals: THREE.Object3D[] = [];
         const highlights: SceneHighlights = {};
         const objects: SceneObjects = {};
+        const defaultMaterials: SceneDefaultMaterials = {};
 
         gltf.scene.children.forEach((obj) => {
             const { name } = obj;      
@@ -108,7 +109,11 @@
             if (obj.name.includes('hidden') || !isVisibleInScene) return (obj.visible = false);
 
             const nameToHighlight = highlightsMap[name as keyof typeof highlightsMap];
-            if(nameToHighlight && obj.isMesh) highlights[nameToHighlight] = obj as THREE.Mesh;
+            if(nameToHighlight && obj.isMesh)
+                highlights[nameToHighlight] = obj as THREE.Mesh;
+
+            
+
             
             const action = obj.userData.type;
             if (action === 'rotate' && interactionsMap[name]) {
@@ -116,7 +121,14 @@
                 obj.userData.update = () =>
                     obj.position.clamp(obj.userData.limit.min, obj.userData.limit.max);
             }
-            if(obj.isMesh) objects[obj.uuid] = obj as THREE.Mesh;
+            if(obj.isMesh) {
+                objects[obj.uuid] = obj as THREE.Mesh;
+                defaultMaterials[obj.uuid] = {
+                    metalness: obj.material.metalness,
+                    roughness: obj.material.roughness,
+                    opacity: obj.material.opacity,
+                    color: obj.material.color.getHexString()};
+            }
         });
 
         //Store data in global stores
@@ -125,6 +137,7 @@
         canvas.set(canvasElem);
         cameraStore.init(camera, cameras, focals);
         sceneObjects.init(objects);
+        sceneDefaultMaterials.init(defaultMaterials);
         sceneHighlights.init(highlights);
         animations.initFromActions(animationActions);
 

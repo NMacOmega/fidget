@@ -492,7 +492,8 @@ function valueToColorObject(value) {
 		hex = RGBtoHEX(rgb);
 		return { hex, hsv, hsl, rgb };
 	}
-	throw new Error('Invalid input to make a color object. input must be parsed first');
+	console.log(value);
+	throw new Error('Invalid input to make a color object.');
 }
 
 //////////////////////////////////////////////////////////////
@@ -770,18 +771,45 @@ function RGBtoHEX(rgb) {
 }
 
 /**
- * @class A {@link Color} Object with Setter Functions to change the stored value
+ * @class A {@link Color} Object with readonly properties representing a parsed color value.
  *
  * @this {ColorObject} A {@link ColorObject} instance with an added vailidity boolean:
- * - hex?: A Hex String
- * - hsl?: {h,s,l}
- * - hsv?: {h,s,v}
- * - rgb?: {r,g,b}
- * - isValid: true/false
+ * - hex: A Hex String
+ * - hsl: {h,s,l}
+ * - hsv: {h,s,v}
+ * - rgb: {r,g,b}
+ * - isValidColor: true/false
  *
- * @see {HEXColor} colorFunctions/HexColor
- * @see {HSLColor} colorFunctions/HSLColor
+ *
+ * 	 * Accepts any valid syntax for {@link HEXColor}, {@link HSVColor}, {@link HSLColor}, or {@link RGBColor}
+ *
+ * The input will be parsed into a {@link ColorObject} if possible
+ *
+ * If provided value fails to parse, will return an object that fails {@link colorSchema} parsing:
+ *
+ * @example failedValue = {
+ *  hex: 'invalid',
+ *  hsl: { h: -1, s: -1, l: -1 },
+ *  hsv: { h: -1, s: -1, v: -1 },
+ *  rgb: { r: -1, g: -1, b: -1 },
+ *  isValidColor: false,
+ * }
+ *
+ * If no value is provided, will be set to default value
+ *
+ * @example defaultValue = {
+ * 	hex: '000000',
+ *  hsl: { h: 0, s: 0, l: 0 },
+ *  hsv: { h: 0, s: 0, v: 0 },
+ *  rgb: { r: 0, g: 0, b: 0 },
+ *  isValidColor: true,
+ * }
+ *
+ * These class instances are Read only. Make a new instance to change a color.
+ * @param {HEXColor | HSLColor | HSVColor | RGBColor} value a value to parse into a {@link Color}
+ * @see {HexColor} colorFunctions/HexColor
  * @see {HSVColor} colorFunctions/HSVColor
+ * @see {HSLColor} colorFunctions/HSLColor
  * @see {RGBColor} colorFunctions/RGBColor
  * @see {Color} colorFunctions/Color
  */
@@ -791,7 +819,15 @@ export class Color {
 	 *
 	 * The input will be parsed into a {@link ColorObject} if possible
 	 *
-	 * If provided value fails to parse, will return [undefined]
+	 * If provided value fails to parse, will return an object that fails {@link colorSchema} parsing:
+	 *
+	 * @example failedValue = {
+	 *  hex: 'invalid'
+	 *  hsl: { h: -1, s: -1, l: -1 },
+	 *  hsv: { h: -1, s: -1, v: -1 },
+	 *  rgb: { r: -1, g: -1, b: -1 },
+	 *  isValidColor: false,
+	 * }
 	 *
 	 * If no value is provided, will be set to default value
 	 *
@@ -800,7 +836,7 @@ export class Color {
 	 *  hsl: { h: 0, s: 0, l: 0 },
 	 *  hsv: { h: 0, s: 0, v: 0 },
 	 *  rgb: { r: 0, g: 0, b: 0 },
-	 *  isValidColor: true
+	 *  isValidColor: true,
 	 * }
 	 * @param {HEXColor | HSLColor | HSVColor | RGBColor | undefined} value a value to parse into a {@link Color}
 	 * @see {HexColor} colorFunctions/HexColor
@@ -809,25 +845,46 @@ export class Color {
 	 * @see {RGBColor} colorFunctions/RGBColor
 	 */
 	constructor(value = undefined) {
-		/**Empty case. Returns default object*/
+		/**Empty case. Returns default object of black*/
 		if (value === undefined) {
-			this.hex = '000000';
-			this.hsv = { h: 0, s: 0, l: 0 };
-			this.hsl = { h: 0, s: 0, v: 0 };
-			this.rgb = { r: 0, g: 0, b: 0 };
-			this.isValidColor = true;
+			this._hex = '000000';
+			this._hsv = { h: 0, s: 0, l: 0 };
+			this._hsl = { h: 0, s: 0, v: 0 };
+			this._rgb = { r: 0, g: 0, b: 0 };
+			this._isValidColor = true;
 			return;
 		}
 
 		const parsedValue = valueToColorObject(value);
 		if (parsedValue) {
-			this.hex = parsedValue.hex;
-			this.hsl = parsedValue.hsl;
-			this.hsv = parsedValue.hsv;
-			this.rgb = parsedValue.rgb;
-			this.isValidColor = true;
+			this._hex = parsedValue.hex;
+			this._hsl = parsedValue.hsl;
+			this._hsv = parsedValue.hsv;
+			this._rgb = parsedValue.rgb;
+			this._isValidColor = true;
 			return;
 		}
-		this.isValidColor = false;
+		/**Failed Case, returns garbage data. Best to run {@colorSchema} safepares before consuming */
+		this._hex = 'invalid';
+		this._hsl = { h: -1, s: -1, l: -1 };
+		this._hsv = { h: -1, s: -1, v: -1 };
+		this._rgb = { r: -1, g: -1, b: -1 };
+		this._isValidColor = false;
+		return;
+	}
+	get hex() {
+		return this._hex;
+	}
+	get hsl() {
+		return this._hsl;
+	}
+	get hsv() {
+		return this._hsv;
+	}
+	get rgb() {
+		return this._rgb;
+	}
+	get isValidColor() {
+		return this._isValidColor;
 	}
 }

@@ -154,7 +154,7 @@
 		width: 200%;
 		height: 100%;
 		overflow: hidden;
-		pointer-events: none;
+		/* pointer-events: none; */
 	}
 
 	.colorPickerSub {

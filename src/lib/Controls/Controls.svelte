@@ -3,9 +3,10 @@
 	import FidgetIcon from './FidgetIcon/FidgetIcon.svelte';
 	import Slider from './../Slider/Slider.svelte';
 	import FidgetChoiceMenu from './FidgetChoiceMenu.svelte';
-	import ColorChoiceMenu from './ColorChoiceMenu.svelte';
+	import ColorChoiceMenu from './ColorChoiceMenu/ColorChoiceMenu.svelte';
 	import { zoom } from '$stores/camera';
 	import { currentFidgetName } from '$stores/material';
+	import { hex } from '$stores/colorStores';
 
 	let zoombarOpen = false;
 	let choosingFidget = false;
@@ -21,7 +22,7 @@
 	<div class="controls">
 		<div class="bg" />
 		<div class="colorIcon" on:click={() => (choosingColor = true)}>
-			<ColorIcon />
+			<ColorIcon hexColor={$hex} />
 		</div>
 		<div class="fidgetIcon">
 			<FidgetIcon icon={$currentFidgetName} on:click={() => (choosingFidget = true)} />
@@ -55,8 +56,8 @@
 		top: 0;
 		left: 0;
 		display: grid;
-		grid-template-columns: 10px 35vw 25vw 1fr 80px 10px;
-		grid-template-rows: 1fr 10px 35vw 10px;
+		grid-template-columns: 10px min(35vw, 25rem) min(25vw, 15rem) 1fr 80px 10px;
+		grid-template-rows: 1fr 10px min(35vw, 25rem) 10px;
 		grid-template-areas:
 			'. . . . . .'
 			'. . . . . .'
@@ -84,8 +85,8 @@
 
 	.fidgetIcon {
 		grid-area: fidget;
-		width: 25vw;
-		height: 25vw;
+		width: min(25vw, 15rem);
+		height: min(25vw, 15rem);
 		align-self: end;
 		margin-left: 20px;
 	}

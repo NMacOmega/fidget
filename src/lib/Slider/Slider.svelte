@@ -17,6 +17,9 @@
 	{min}
 	{max}
 	on:input
+	on:mousedown
+	on:mouseup
+	on:click
 	{...$$restProps}
 />
 

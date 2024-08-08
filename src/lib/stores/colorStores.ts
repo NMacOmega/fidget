@@ -1,24 +1,38 @@
 import { writable, derived } from "svelte/store";
 import { Color } from "$lib/colorFunctions";
 import type { HEXColor, rgbNumberType, percentNumberType, HueNumberType } from "$lib/colorFunctions";
+import { _updateMaterialColorFromColorStore } from "./material";
+// import getObjec
 //Import material store in order to edit the object
 
 
 export const colorStore = (function(){
-	const {subscribe, update} = writable({...new Color()});
-	const set = (newColor: Color)=>{
-		if(newColor instanceof Color && newColor.isValidColor){
+	const {subscribe, update} = writable(new Color());
+	/** Sets color of the colorstore when a new material is chosen. Used to avoid color loops */
+	const _setFromNewMaterial = (hexColor:HEXColor)=>{
+		const newColor = new Color(hexColor);
+		if(newColor?.hex && newColor.isValidColor)
 			update((curr)=>{
-				if (curr?.hex !== newColor.hex) {
-					updateMaterial(newColor.hex);
-					return {...newColor};}
-			}); 
+				if(curr.hex !== newColor.hex){
+					return newColor;
+				}
+				else return curr;
+			})
 		}
+		const set = (newColor: Color)=>{
+			if(newColor?.hex && newColor?.isValidColor)
+				{
+					update((curr)=>{
+					if(curr.hex!== newColor.hex){
+						_updateMaterialColorFromColorStore(newColor.hex);
+					return newColor;
+				}
+				else return curr;
+			})
+		}
+
 	}
-	const updateMaterial = (hexColor: HEXColor)=> {
-		//updateMaterial
-	}
-	return {subscribe, set};
+	return {subscribe, set, _setFromNewMaterial};
 })();
 
 
@@ -30,8 +44,8 @@ export const hex = (function(){
 function setHex  (hex: HEXColor){
 	try{
 		const newColor = new Color(hex);
-		if(newColor?.isValidColor) colorStore.set({...newColor});
-		else throw new Error('Failed to parse Hex Value.');
+		if(newColor.isValidColor) colorStore.set(newColor);
+		else throw new Error(`Failed to parse Hex Value: \n ${hex}. \nStore not updated.`);
 	}
 	catch(e){
 		console.log(e);
@@ -46,8 +60,8 @@ export const rgb = (function(){
 function setRGB  (r:rgbNumberType, g:rgbNumberType, b:rgbNumberType){
 	try{
 		const newColor = new Color({r, g, b});
-		if(newColor?.isValidColor) colorStore.set({...newColor});
-		else throw new Error('Failed to parse RGB Value.');
+		if(newColor?.isValidColor) colorStore.set(newColor);
+		else throw new Error(`Failed to parse RGB Value: \n R:${r}. G:${g}, B:${b}. \nStore not updated.`);
 	}
 	catch(e){
 		console.log(e);
@@ -62,8 +76,8 @@ export const hsl = (function(){
 function setHSL  (h:HueNumberType, s:percentNumberType, l:percentNumberType){
 	try{
 		const newColor = new Color({h, s, l});
-		if(newColor?.isValidColor) colorStore.set({...newColor});
-		else throw new Error('Failed to parse HSL Value.');
+		if(newColor?.isValidColor) colorStore.set(newColor);
+		else throw new Error(`Failed to parse HSL Value: \n H:${h}. S:${s}, L:${l}. \nStore not updated.`);
 	}
 	catch(e){
 		console.log(e);
@@ -78,8 +92,8 @@ export const hsv = (function(){
 function setHSV  (h:HueNumberType, s:percentNumberType, v:percentNumberType){
 	try{
 		const newColor = new Color({h, s, v});
-		if(newColor?.isValidColor) colorStore.set({...newColor});
-		else throw new Error('Failed to parse HSV Value.');
+		if(newColor?.isValidColor) colorStore.set(newColor);
+		else throw new Error(`Failed to parse HSV Value: \n H:${h}. S:${s}, V:${v}. \nStore not updated.`);
 	}
 	catch(e){
 		console.log(e);
