@@ -3,7 +3,7 @@ import {get} from 'svelte/store';
 import { getPickPosition, pickObjectFromPosition } from "$lib/ThreeJsScene/ThreeJsPicker";
 import {handleRotation}  from "$lib/ThreeJsScene/ThreeJsRotate";
 
-import { selectedUUID, isMouseDown, pickPosition, interactions } from '$stores/material';
+import { selectedUUID, isMouseDown, pickPosition, interactions } from '$stores/activeMaterial';
 import { orbit } from '$stores/camera';
 
 

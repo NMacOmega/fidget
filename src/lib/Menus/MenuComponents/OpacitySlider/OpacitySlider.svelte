@@ -1,28 +1,26 @@
 <script lang="ts">
-	import { hsl, opacity, selectedUUID } from '$stores/activeMaterial';
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
 
-	export let min = 0.0,
+	export let value = 0,
+		min = 0.0,
 		max = 100,
 		step = 0.1;
 
 	//CSS values
-	let value = $opacity || 0;
-	let h = 0,
+	export let h = 0,
 		s = 0,
 		l = 0;
+	//@TODO: Maybe on lighter hues change the border to black?
 
-	const onMaterialChange = (_trigger: typeof $selectedUUID) => (value = $opacity);
-	const onInput = (str: string) => opacity.set(Number(str));
-
-	$: onMaterialChange($selectedUUID);
-	$: ({ h, s, l } = $hsl);
+	const onInput = (str: string) => dispatch('opacityChange', { value: Number(str) });
 </script>
 
 <div
 	class="colorAlpha"
-	style:--left={`${$opacity}%`}
+	style:--left={`${value}%`}
 	style:--color={`hsl(${h},${100}%,${50}%)`}
-	style:--opacity-color={`hsla(${h}, ${s}%, ${l}%, ${opacity})`}
+	style:--opacity-color={`hsla(${h}, ${s}%, ${l}%, ${value})`}
 >
 	<input
 		id="colorAlphaSlider"
@@ -43,7 +41,7 @@
 <style>
 	.colorAlpha {
 		direction: ltr;
-		margin: 20px auto;
+		margin: auto;
 		border-radius: 5px;
 		position: relative;
 		width: calc(100% - 30px);

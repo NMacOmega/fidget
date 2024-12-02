@@ -1,5 +1,5 @@
 <script>
-	import { hsl, hsv, rgb, hex } from '$stores/material';
+	import { hsl, hsv, rgb, hex } from '$stores/activeMaterial';
 	// import { hslStore, hsvStore, rgbStore, hexStore } from '$lib/materialStores';
 	let hslString, hsvString, rgbString, hexString;
 	let inputString;

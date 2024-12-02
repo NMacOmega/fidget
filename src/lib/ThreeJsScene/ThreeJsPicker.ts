@@ -1,5 +1,5 @@
 import { Raycaster, Vector2 } from 'three';
-import { canvas, scene} from '$stores/material';
+import { canvas, scene} from '$stores/activeMaterial';
 import { camera } from '$stores/camera';
 import {get} from 'svelte/store';
 

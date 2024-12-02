@@ -1,6 +1,6 @@
 import { readable, writable, derived, get } from 'svelte/store';
 import { readableWithInit } from './custom';
-import { Color, convert} from '$lib/colorFunctions.js';
+import { Color} from '$lib/colorFunctions.js';
 import { type ColorObject, type RGBColor, type HSLColor, type HEXColor, type HSVColor, type RGBTupleColor, type HSLTupleColor, type HueNumberType, type percentNumberType, type HSVTupleColor, type rgbNumberType, type HSLString, type HSVString, type RGBString, preprocessHex} from '$lib/colorFunctions.js';
 import type { Material, MeshStandardMaterial, Vector2 } from 'three';
 import type { InteractionsMap, SceneObjects, SceneHighlights, THREEUUID } from '$types';
@@ -14,6 +14,8 @@ export const sceneHighlights = readableWithInit(<SceneHighlights>{});
 
 /**Used to determine which objects to show or hide depending on the fidget being shown */
 export const currentFidgetName = writable(''); 
+
+export const fidgetsList = readableWithInit<string[]>([]);
 
 
 

@@ -56,7 +56,6 @@
 	}
 
 	function generateColorText(color: Color, mode: typeof colorMode) {
-		//TODO: Round color numbers and capitalize hex characters
 		if (['hsl', 'hsv', 'hex', 'rgb'].indexOf(mode) < 0) return;
 		let result;
 		if (mode === 'hex') result = `#${color.hex?.toLocaleUpperCase()}`;
@@ -76,9 +75,7 @@
 		colorMode = mode;
 	}
 
-	function parseTextInput(text: string, mode: typeof colorMode) {
-		//TODO: Make this parse in real time and update Color
-	}
+	function parseTextInput(text: string, mode: typeof colorMode) {}
 
 	//Needed for bug that prevents setting range value above 100
 	let hueSliderVal: HueNumberType;

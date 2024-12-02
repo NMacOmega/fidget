@@ -1,7 +1,7 @@
 import { writable, derived } from "svelte/store";
 import { Color } from "$lib/colorFunctions";
 import type { HEXColor, rgbNumberType, percentNumberType, HueNumberType } from "$lib/colorFunctions";
-import { _updateMaterialColorFromColorStore } from "./material";
+import { _updateMaterialColorFromColorStore } from "./activeMaterial";
 // import getObjec
 //Import material store in order to edit the object
 

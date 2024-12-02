@@ -20,7 +20,6 @@
 	export let onMarkerDrag: true | undefined = undefined;
 	export let onScrollbarClick: true | undefined = undefined;
 
-	//TODO: integrate booleans to control behavior, slots for styling, and logic for inserting elements
 	//If certain properteis are not provided, we need to detect and put our own styling in
 	//bools
 	/*
@@ -151,7 +150,6 @@
 		lockScrollTimer(1000);
 	}
 	function onTouchEvent(touch: Touch) {
-		/**@todo:add functionality for movement as well*/
 		activeScrollSource = 'marker-touch';
 		let newPoint = scrollDirection === 'horizontal' ? touch.clientX : touch.clientY;
 		let scrollPageOffset =
@@ -167,7 +165,6 @@
 		lockScrollTimer();
 	}
 	function onTouchMoveEvent(touchX: any, touchY: any) {
-		/**@todo: Math is off when swiping*/
 		let newTouch = scrollDirection === 'horizontal' ? touchX : touchY;
 		let oldTouch = scrollDirection === 'horizontal' ? screenX : screenY;
 		let scrollLength =
@@ -217,7 +214,7 @@
 	}
 
 	function onResize() {
-		//@todo When resizing updates sometimes jump to end of scroll, not where is should be
+		//@ When resizing updates sometimes jump to end of scroll, not where is should be
 		let wasVertical = scrollDirection === 'vertical';
 		scrollDirection = getActiveScrollPosition();
 		let nowVertical = scrollDirection === 'vertical';

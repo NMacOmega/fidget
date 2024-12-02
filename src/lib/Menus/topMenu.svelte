@@ -1,16 +1,26 @@
 <script>
-	import ColorIcon from './ColorIcon/ColorIcon.svelte';
-	import FidgetIcon from './FidgetIcon/FidgetIcon.svelte';
-	import Slider from './../Slider/Slider.svelte';
-	import FidgetChoiceMenu from './FidgetChoiceMenu.svelte';
-	import ColorChoiceMenu from './ColorChoiceMenu/ColorChoiceMenu.svelte';
+	import ColorIcon from './MenuComponents/ColorIcon/ColorIcon.svelte';
+	import FidgetIcon from './MenuComponents/FidgetIcon/FidgetIcon.svelte';
+	import Slider from './MenuComponents/Slider/Slider.svelte';
+	// import FidgetChoiceMenu from './FidgetChoiceMenu.svelte';
+	import FidgetMenu from './FidgetMenu/FidgetMenu.svelte';
+	import ColorMenu from './ColorMenu/ColorMenu.svelte';
+	import ColorEditMenu from './ColorEditMenu/ColorEditMenu.svelte';
 	import { zoom } from '$stores/camera';
 	import { currentFidgetName } from '$stores/activeMaterial';
-	import { hex } from '$stores/colorStores';
+	import {
+		currentMaterialColor,
+		currentMaterialMetalness,
+		currentMaterialOpacity,
+		currentMaterialRoughness
+	} from '$stores/materialList';
 
 	let zoombarOpen = false;
 	let choosingFidget = false;
 	let choosingColor = false;
+	let editingColor = false;
+	let editMenuActiveTab = 'color';
+
 	const onZoomBarChange = (e) => zoom.setFromValue(Number(e.currentTarget.value));
 </script>
 
@@ -23,61 +33,83 @@
 	}}
 />
 
-<div class="controls">
-	<div class="bg" />
+<div class="menus">
 	{#if choosingFidget}
-		<FidgetChoiceMenu on:close={() => (choosingFidget = false)} />
+		<FidgetMenu on:close={() => (choosingFidget = false)} />
 	{:else if choosingColor}
-		<ColorChoiceMenu on:close={() => (choosingColor = false)} />
+		<ColorMenu
+			on:close={() => (choosingColor = false)}
+			on:edit={() => {
+				choosingColor = false;
+				editingColor = true;
+			}}
+		/>
+	{:else if editingColor}
+		<ColorEditMenu
+			bind:activeTab={editMenuActiveTab}
+			on:close={() => {
+				editingColor = false;
+				choosingColor = true;
+			}}
+		/>
 	{:else}
-		<div class="colorIcon" on:click={() => (choosingColor = true)}>
-			<ColorIcon hexColor={$hex} />
-		</div>
-		<div class="fidgetIcon">
-			<FidgetIcon icon={$currentFidgetName} on:click={() => (choosingFidget = true)} />
-		</div>
-		<div class="zoom">
-			<div
-				class="zoomBar"
-				style:transform={`translateX(${zoombarOpen ? 'calc(var(--ts) * 0.4)' : '210px'})`}
-			>
-				<div class="zoomIcons">
-					<i class="fa-solid fa-magnifying-glass-plus" />
-					<i class="fa-solid fa-magnifying-glass-minus" />
-				</div>
-				<Slider vertical value={$zoom} on:input={onZoomBarChange} min={1} max={99} step={5} />
+		<div class="topMenu">
+			<div class="bg" />
+			<div class="colorIcon" on:click={() => (choosingColor = true)}>
+				<ColorIcon
+					hexColor={$currentMaterialColor}
+					metalness={$currentMaterialMetalness}
+					roughness={$currentMaterialRoughness}
+					opacity={$currentMaterialOpacity}
+				/>
 			</div>
-			<button
-				class="zoomButton"
-				style:transform={`translateX(${!zoombarOpen ? '8px' : '-8px'})`}
-				on:click={() => (zoombarOpen = !zoombarOpen)}
-				><i class="fa-solid fa-magnifying-glass-minus zoomButtonIcon" /></button
-			>
+			<div class="fidgetIcon">
+				<FidgetIcon icon={$currentFidgetName} on:click={() => (choosingFidget = true)} />
+			</div>
+			<div class="zoom">
+				<div
+					class="zoomBar"
+					style:transform={`translateX(${zoombarOpen ? 'calc(var(--ts) * 0.4)' : '210px'})`}
+				>
+					<div class="zoomIcons">
+						<i class="fa-solid fa-magnifying-glass-plus" />
+						<i class="fa-solid fa-magnifying-glass-minus" />
+					</div>
+					<Slider vertical value={$zoom} on:input={onZoomBarChange} min={1} max={99} step={5} />
+				</div>
+				<button
+					class="zoomButton"
+					style:transform={`translateX(${!zoombarOpen ? '8px' : '-8px'})`}
+					on:click={() => (zoombarOpen = !zoombarOpen)}
+					><i class="fa-solid fa-magnifying-glass-minus zoomButtonIcon" /></button
+				>
+			</div>
 		</div>
 	{/if}
 </div>
 
 <style type="postcss">
-	.controls {
+	.menus {
 		width: 100%;
 		height: 100%;
 		position: absolute;
 		top: 0;
 		left: 0;
-		display: grid;
-		grid-template-columns: 10px min(35vw, 10rem) min(25vw, 15rem) 1fr 80px 10px;
-		grid-template-rows: 1fr 6rem 10px min(35vw, 10rem) 10px;
-		grid-template-areas:
-			'. . . . . .'
-			'colormenu colormenu colormenu colormenu colormenu colormenu'
-			'. . . . . .'
-			'. color fidget . zoom .'
-			'. . . . . .';
+
 		pointer-events: none;
 	}
 
-	.controls > * {
-		pointer-events: auto;
+	.topMenu {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		grid-template-columns: 10px min(35vw, 10rem) min(25vw, 15rem) 1fr 80px 10px;
+		grid-template-rows: 1fr 10px min(35vw, 10rem) 10px;
+		grid-template-areas:
+			'. . . . . .'
+			'. . . . . .'
+			'. color fidget . zoom .'
+			'. . . . . .';
 	}
 
 	.bg {
@@ -91,6 +123,7 @@
 		grid-area: color;
 		width: min(100%, 10rem);
 		height: min(100%, 10rem);
+		pointer-events: auto;
 	}
 
 	.fidgetIcon {
@@ -99,6 +132,7 @@
 		height: min(25vw, 7rem);
 		align-self: end;
 		margin-left: 20px;
+		pointer-events: auto;
 	}
 
 	.zoom {

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { initializeThreeJSSceneFromModelURL, onWindowResize } from './ThreeJsInit';
 	import { onMouseDown, onMouseUp, onMouseDrag } from './ThreeJsEvents';
-	import { selectedUUID } from '$stores/material';
+	import { selectedUUID } from '$stores/activeMaterial';
 
 	/**URL to model, stored in environment and provided by page.svelte*/
 	export let modelURL: string;
@@ -33,8 +33,8 @@
 
 <style>
 	.canvas {
-		min-width: 100% !important;
-		max-height: 100%;
-		margin: auto;
+		width: 100% !important;
+		/* max-height: 100%; */
+		/* margin: auto; */
 	}
 </style>

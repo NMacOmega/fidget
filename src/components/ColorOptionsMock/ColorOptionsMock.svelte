@@ -10,8 +10,6 @@
 		metalness: number;
 	};
 
-	//@todo: Get the buttons to change the material, then add controls to delete and update with new color
-
 	//To be updated by values from the current material
 	let h = 220;
 	let s = 75;

@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import { currentFidgetName, highlightFidget } from '$stores/material';
+	import { currentFidgetName, highlightFidget } from '$stores/activeMaterial';
 	import FidgetIcon from './FidgetIcon/FidgetIcon.svelte';
 	const dispatch = createEventDispatcher();
 

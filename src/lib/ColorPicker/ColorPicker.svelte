@@ -8,7 +8,7 @@
 	import OpenSubmenuBtn from './subComponents/OpenSubmenuBtn.svelte';
 	import ColorInput from './subComponents/ColorInput.svelte';
 	import ColorSwatches from './subComponents/ColorSwatches.svelte';
-	import { hsv, selectedUUID } from '$stores/material';
+	import { hsv, selectedUUID } from '$stores/activeMaterial';
 	import type { HSVColor } from '$lib/colorFunctions';
 	import type { SvelteComponent } from 'svelte';
 

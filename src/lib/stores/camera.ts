@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 import {get} from 'svelte/store';
-import { highlightFidget } from "$lib/stores/material";
+import { highlightFidget } from "$stores/activeMaterial";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import type { Camera, Object3D } from "three";
 

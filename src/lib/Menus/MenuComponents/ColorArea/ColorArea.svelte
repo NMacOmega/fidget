@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { hsv, hex, selectedUUID } from '$stores/activeMaterial';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	let thisElement: HTMLElement,
-		isMouseCaptured = false;
-
+		isInteractionCaptured = false;
+	export let h = 0,
+		s = 0,
+		v = 0;
 	//CSS Variables
 	let leftOffset = 0,
 		topOffset = 0;
+	let baseColor, flatColor;
 
 	/**
 	 * Utility function to clamp a number between the provieded max and min values
@@ -24,62 +26,63 @@
 	 * Clamps the values to allow some margin to run outside of it's border
 	 *
 	 * exported to enable triggering by parrent
-	 * @param _optionalTrigger used to trigger this action when a variable changes
-	 * @param s current HSV saturation, taken from HSV store by default
-	 * @param v current HSV value, taken from HSV store by default
+	 * @param saturation current HSV saturation, taken from HSV store by default
+	 * @param value current HSV value, taken from HSV store by default
 	 * @void updates the left and top properties of the marker element
 	 */
-	export const updateOffset = (
-		_optionalTrigger: typeof $selectedUUID | null,
-		s = $hsv.s,
-		v = 100 - $hsv.v
-	) => {
-		leftOffset = clamp(s, 95.5, -6.5);
-		topOffset = clamp(v, 95.5, -6.5);
+	export const updateOffset = (saturation = s, value = 100 - v) => {
+		leftOffset = clamp(saturation, 95.5, -6.5);
+		topOffset = clamp(value, 95.5, -6.5);
 	};
 
-	/**
-	 * When mouse click occurs, takes the location of the click relative to color area
-	 * and converts into HSV saturation and value parameters.
-	 *
-	 * Updates the HSV store with the results.
-	 * @param e the mouse click event
-	 * @shortcircuits-if
-	 * - global isMouseCaptures is false, and we are thus not listening for events on this element
-	 * - There is no detected colorArea element in the DOM to measure
-	 * @void updates HSV store with new S and V from marker location
-	 */
-	const updateSaturationAndValueOnClick = (
-		e: MouseEvent & {
-			currentTarget: (EventTarget & HTMLDivElement) | Window;
-		}
-	) => {
-		if (!isMouseCaptured || !thisElement) return;
-		const { clientX, clientY } = e;
+	function onMouseInteraction(e: MouseEvent) {
+		updateSaturationAndValue(e.clientX, e.clientY);
+	}
+
+	function onTouchInteraction(e: TouchEvent) {
+		if (!isInteractionCaptured) return;
+		e.stopPropagation();
+		e.preventDefault();
+		updateSaturationAndValue(e.touches[0].clientX, e.touches[0].clientY);
+	}
+
+	function updateSaturationAndValue(clientX: number, clientY: number) {
+		if (!isInteractionCaptured || !thisElement) return;
+		if (clientX < 0 || clientY < 0) return;
 		const { top, left, width, height } = thisElement.getBoundingClientRect();
 		const leftPoint = ((clientX - left) / width) * 100;
 		const topPoint = ((clientY - top) / height) * 100;
 
-		const s = clamp(leftPoint, 100, 0.0001);
-		const v = clamp(100 - topPoint, 100, 0.0001);
-		updateOffset(null, leftPoint, topPoint);
-		dispatch('colorAreaChange', { value: { h: $hsv.h, s, v } });
-	};
+		const saturation = clamp(leftPoint, 100, 0.0001);
+		const value = clamp(100 - topPoint, 100, 0.0001);
+		updateOffset(leftPoint, topPoint);
+		dispatch('newHSV', { value: { h, s: saturation, v: value } });
+	}
+
+	$: baseColor = `hsl(${h}, ${s}%, ${v}%)`;
+	$: flatColor = `hsl(${h}, 100%, 50%)`;
+	updateOffset(); //For Positioning the icon at render, may need a delay;
 </script>
 
 <svelte:window
-	on:mousemove={updateSaturationAndValueOnClick}
-	on:mouseup={() => (isMouseCaptured = false)}
+	on:mousemove={onMouseInteraction}
+	on:touchmove|nonpassive={onTouchInteraction}
+	on:mouseup={() => (isInteractionCaptured = false)}
+	on:touchend={() => (isInteractionCaptured = false)}
 />
 <div
 	class="colorArea"
 	style:--left={`${leftOffset}%`}
 	style:--top={`${topOffset}%`}
-	style:--color={$hex}
-	style:--flatcolor={`hsl(${$hsv.h || '0'}, 100%, 50%)`}
+	style:--color={baseColor}
+	style:--flatcolor={flatColor}
 	on:mousedown={(e) => {
-		isMouseCaptured = true;
-		updateSaturationAndValueOnClick(e);
+		isInteractionCaptured = true;
+		onMouseInteraction(e);
+	}}
+	on:touchstart={(e) => {
+		isInteractionCaptured = true;
+		onTouchInteraction(e);
 	}}
 	bind:this={thisElement}
 >

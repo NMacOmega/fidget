@@ -3,13 +3,12 @@
 	import ThreeJsScene from '$lib/ThreeJsScene/ThreeJsScene.svelte';
 	// import Icon from '$lib/Icon/Icon.svelte';
 	// import { camera } from '$stores/camera';
-	// import ZoomSlider from '$lib/ZoomSlider/ZoomSlider.svelte';
 	// import AnimationStartButton from '$lib/AnimationStartButton/AnimationStartButton.svelte';
 	// import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
 	// import ColorPickerMock from '@comps/ColorPickerMock/ColorPickerMock.svelte';
 	// import ColorOptionsMock from '@comps/ColorOptionsMock/ColorOptionsMock.svelte';
-	// import ZoomMock from '@comps/ZoomMock/ZoomMock.svelte';
 	import Controls from '$lib/Controls/Controls.svelte';
+	import TopMenu from '$lib/Menus/topMenu.svelte';
 </script>
 
 <section class="firstSection">
@@ -39,7 +38,8 @@
 		<!-- <ZoomSlider /> -->
 		<!-- <ColorPickerMock /> -->
 		<!-- <ColorOptionsMock /> -->
-		<Controls />
+		<!-- <Controls /> -->
+		<TopMenu />
 	</div>
 </section>
 
@@ -97,9 +97,10 @@
 	.demo {
 		background-color: #00000050;
 		height: 100vh;
-		min-width: 100vw;
+		width: 80vw;
 		margin: auto;
 		position: relative;
+		overflow: hidden;
 	}
 
 	.cta {

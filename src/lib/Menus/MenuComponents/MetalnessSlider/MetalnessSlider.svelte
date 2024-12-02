@@ -1,15 +1,12 @@
 <script lang="ts">
-	import { metalness, selectedUUID } from '$stores/activeMaterial';
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
 
-	type EventWithVal = Event & {
-		currentTarget: EventTarget & HTMLInputElement;
-	};
-
+	export let value = 0;
 	export let max = 100;
 	export let min = 0;
 	export let step = 0.1;
 
-	let value = $metalness || 0;
 	/**Height of this bar*/
 	let height = 0;
 	/**Width of this bar*/
@@ -32,7 +29,8 @@
 	/** Clamps provided number between max and min values*/
 	const clamp = (num: number, max: number, min: number) => Math.min(max, Math.max(min, num));
 
-	/**For some reason I cannot calculate these reactively or compress the calculateions. My head hurts
+	const onInput = (str: string) => dispatch('metalnessChange', { value: Number(str) });
+	/**
 	 * @void updates the 4 points used for the marker shape
 	 */
 	const generateStyle = (metalness: number) => {
@@ -46,12 +44,6 @@
 		c = clamp(110 - c, 75, 10);
 		d = clamp(100 - d / height, 65, 0);
 	};
-
-	const onMaterialChange = (_trigger: typeof $selectedUUID) => (value = $metalness);
-	const onInput = (e: EventWithVal) => metalness.set(Number(e.currentTarget.value));
-
-	$: onMaterialChange($selectedUUID);
-
 	$: stop = value;
 	$: shade = 100 - stop > 50 ? 100 : 0;
 	$: generateStyle(value);
@@ -82,7 +74,7 @@
 			{step}
 			aria-label="metalic slider"
 			bind:value
-			on:input={onInput}
+			on:input={(e) => onInput(e.currentTarget.value)}
 		/>
 	</div>
 	<div id="metalnessMarker" class="metalnessMarker" />
@@ -91,7 +83,7 @@
 <style>
 	.metalness {
 		direction: ltr;
-		margin: 20px auto;
+		margin: auto;
 		border-radius: 5px;
 		position: relative;
 		width: calc(100% - 30px);

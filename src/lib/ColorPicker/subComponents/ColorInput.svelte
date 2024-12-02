@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { hsl, hex, hsv, rgb } from '$stores/material';
+	import { hsl, hex, hsv, rgb } from '$stores/activeMaterial';
 	import { createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();

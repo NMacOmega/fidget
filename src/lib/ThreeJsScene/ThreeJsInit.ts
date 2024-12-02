@@ -4,10 +4,12 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 	import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 	import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment';
-    import { sceneObjects, sceneDefaultMaterials, canvas, scene as sceneStore, sceneHighlights, highlightFidget, interactions} from '$stores/material';
+    import { sceneObjects, sceneDefaultMaterials, canvas, scene as sceneStore, sceneHighlights, highlightFidget, interactions, roughness, opacity} from '$stores/activeMaterial';
     import { camera as cameraStore, orbit as orbitStore, zoom as zoomStore } from '$stores/camera';
     import { animations } from '$stores/animation';
+    import { materialsOptionsStore, initializeCurrentMaterialOptions } from '$stores/materialList';
     import type { SceneObjects, SceneHighlights, SceneDefaultMaterials} from '$types';
+import { fidgetsList } from '$stores/materialOld';
     
     //These global variables store theeJS elements needed across intialization, render, and animate
     let threeScene: THREE.Scene;
@@ -94,12 +96,14 @@
             'sphereBase' : 'focus2',
             'baseInner': 'focus3'
         };
+        const fidgets = ['cube', 'discs', 'sphere'];
         const interactionsMap = get(interactions)
         const cameras: THREE.Object3D[] = [];
         const focals: THREE.Object3D[] = [];
         const highlights: SceneHighlights = {};
         const objects: SceneObjects = {};
         const defaultMaterials: SceneDefaultMaterials = {};
+        const initialMaterials = {};
 
         gltf.scene.children.forEach((obj) => {
             const { name } = obj;      
@@ -129,6 +133,35 @@
                     opacity: obj.material.opacity,
                     color: obj.material.color.getHexString()};
             }
+            initialMaterials[obj.uuid] = {
+                activeOption: 0, //option 0 is default
+                options: [
+                    {
+                        metalness: obj.material.metalness*100,
+                        roughness: obj.material.roughness*100,
+                        opacity: obj.material.opacity*100,
+                        color: obj.material.color.getHexString()
+                    },
+                    {
+                        metalness: 50,
+                        roughness: 50,
+                        opacity: 100,
+                        color: 'ff0000',
+                    },
+                    {
+                        metalness: 90,
+                        roughness: 20,
+                        opacity: 50,
+                        color: '00ff00',
+                    },
+                    {
+                        metalness: 20,
+                        roughness: 90,
+                        opacity: 20,
+                        color: '0000ff',
+                    }
+                ]
+            }
         });
 
         //Store data in global stores
@@ -138,7 +171,9 @@
         cameraStore.init(camera, cameras, focals);
         sceneObjects.init(objects);
         sceneDefaultMaterials.init(defaultMaterials);
+        materialsOptionsStore.set(initialMaterials);
         sceneHighlights.init(highlights);
+        fidgetsList.init([...fidgets]);
         animations.initFromActions(animationActions);
 
         //Store to local globals so we don't need to use get()
@@ -154,6 +189,7 @@
         //Tell THREEJS to refresh and focus on the initial focus point
         orbit.update();
         highlightFidget('focus1');  
+        initializeCurrentMaterialOptions();
         onWindowResize(canvasElem);
         animate();
     }

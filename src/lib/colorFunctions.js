@@ -57,6 +57,7 @@ const extractPropertyFromObject = (obj, tags, isValidValue = () => true) => {
 		const isValidKey = tags.indexOf(key.toLowerCase()) > -1;
 		if (isValidKey && isValidValue(prop)) return prop;
 	}
+	return undefined;
 };
 
 /**
@@ -215,8 +216,20 @@ const castToHSV = z.preprocess(preprocessHSV, hsvSchema);
 const castToRGB = z.preprocess(preprocessRGB, rgbSchema);
 
 // prettier-ignore
-export const convert = {
-	rgb: {
+export const colorConvert = {
+	RGB: {
+		/**
+		 * Casts val to {R, G, B} Object before parsing against RGB Schema
+		 * - if not possible, returns undefined
+		 * @param {unknown} unknownValue An unknown value, presumed to be an array of numbers
+		 * @returns {{isValid: boolean, data: RGBColor} | undefined} The {@link RGBColor} or undefined if failed
+		 */
+		preprocess: (unknownValue) => {
+			let result = preprocessRGB(unknownValue);
+			if(result && result.r && result.g && result.b) return {isValid: true, data: {...result}};
+		},
+
+
 		/**
 		 * Valid RGB values:
 		 * - r, g, b = 0 <=> 360
@@ -227,7 +240,7 @@ export const convert = {
 		 * @returns {HSLColor | undefined} {h, s, l}, or undefined if failed. See {@link HSLColor}  
 		 * @see {@link convert.rgb.hsl} 
 		 * */
-		hsl: (val) => parseAndConvert(val, rgbSchema, hslSchema, [RGBtoHSV, HSVtoHSL], castToRGB),
+		toHSL: (val) => parseAndConvert(val, rgbSchema, hslSchema, [RGBtoHSV, HSVtoHSL], castToRGB),
 		
 		/**
 		 * Valid RGB values:
@@ -239,7 +252,7 @@ export const convert = {
 		 * @returns {HSVColor | undefined} {h, s, v}, or undefined if failed. See {@link HSVColor}  
 		 * @see {@link convert.rgb.hsv} 
 		 * */
-		hsv: (val) => parseAndConvert(val, rgbSchema, hsvSchema, [RGBtoHSV], castToRGB),
+		toHSV: (val) => parseAndConvert(val, rgbSchema, hsvSchema, [RGBtoHSV], castToRGB),
 		
 		/**
 		 * Valid RGB values:
@@ -251,7 +264,7 @@ export const convert = {
 		 * @returns {HEXColor | undefined} A HEX String, or undefined if failed. See {@link HEXColor}  
 		 * @see {@link convert.rgb.hex} 
 		 * */
-		hex: (val) => parseAndConvert(val, rgbSchema, hexSchema, [RGBtoHEX], castToRGB),
+		toHEX: (val) => parseAndConvert(val, rgbSchema, hexSchema, [RGBtoHEX], castToRGB),
 		
 		/**
 		 * Valid RGB values:
@@ -266,7 +279,21 @@ export const convert = {
 		toColor: (val) => parseAndConvert(val, rgbSchema, colorSchema, [valueToColorObject], castToRGB),
 	},
 
-	hsl: {
+	HSL: {
+
+		/**
+		 * Casts val to {H, S, L} Object before parsing against HSL Schema
+		 * - h must be 0 <= h <= 360
+		 * - s and l must be 0 <= n <= 100
+		 * - returns undefined if requirements not met
+		 * @param {unknown} unknownValue string, object, or array with h, s, l values
+		 * @returns {{isValid: boolean, data: HSLColor} | undefined} The {@link HSLColor} or undefined if failed
+		 */
+		preprocess: (unknownValue) => {
+			let result = preprocessHSL(unknownValue);
+			if(result && result.h && result.s && result.l) return {isValid: true, data: {...result}};
+		},
+
 		/**
 		 *  Valid HSL values:
 		 *  - h = 0 <=> 360
@@ -278,7 +305,7 @@ export const convert = {
 		 * @returns {RGBColor | undefined} {r, g, b}, or undefined if failed. See {@link RGBColor}  
 		 * @see {@link convert.hsl.rgb} 
 		 * */
-		rgb: (val) => parseAndConvert(val, hslSchema, rgbSchema, [HSLtoHSV, HSVtoRGB], castToHSL),
+		toRGB: (val) => parseAndConvert(val, hslSchema, rgbSchema, [HSLtoHSV, HSVtoRGB], castToHSL),
 		
 		/**
 		 *  Valid HSL values:
@@ -291,7 +318,7 @@ export const convert = {
 		 * @returns {HSVColor | undefined} {h, s, v}, or undefined if failed. See {@link HSVColor}  
 		 * @see {@link convert.hsl.hsv} 
 		 * */
-		hsv: (val) => parseAndConvert(val, hslSchema, hsvSchema, [HSLtoHSV], castToHSL),
+		toHSV: (val) => parseAndConvert(val, hslSchema, hsvSchema, [HSLtoHSV], castToHSL),
 		
 		/**
 		 *  Valid HSL values:
@@ -304,7 +331,7 @@ export const convert = {
 		 * @returns {HEXColor | undefined} A HEX String, or undefined if failed. See {@link HEXColor}  
 		 * @see {@link convert.hsl.hex} 
 		 * */
-		hex: (val) => parseAndConvert(val, hslSchema, hexSchema, [HSLtoHSV, HSVtoRGB, RGBtoHEX], castToHSL),
+		toHEX: (val) => parseAndConvert(val, hslSchema, hexSchema, [HSLtoHSV, HSVtoRGB, RGBtoHEX], castToHSL),
 		
 		/**
 		 *  Valid HSL values:
@@ -320,7 +347,32 @@ export const convert = {
 		toColor: (val) => parseAndConvert(val, hslSchema, colorSchema, [valueToColorObject], castToHSL),
 	},
 
-	hsv: {
+	HSV: {
+
+		/**
+		 *  Valid HSV values:
+		 *  - h = 0 <=> 360
+		 * - s = 0 <=> 100
+		 * - v = 0 <=> 100
+		 * - FORMAT: {h, s, v} or [h, s, v]
+		 * 
+		 * @param {HSVColor} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}  
+		 * @returns {z.SafeParseReturnType<HSVColor, HSVColor>} Zod Safeparse return parameters
+		 * @see {@link convert.hsv.isValid} 
+		 * */
+		isValid: (val) => hsvSchema.safeParse(val),
+		
+		/**
+		 * Casts val to {H, S, V} Object before parsing against HSV Schema
+		 * - if not possible, returns undefined
+		 * @param {unknown} unknownValue An unknown value, presumed to be an array of numbers
+		 * @returns {{isValid: boolean, data: HSVColor } | undefined} The HSV result Array or undefined if failed
+		 */
+		preprocess: (unknownValue) => {
+			let result = preprocessHSV(unknownValue);
+			if(result ) return {isValid: true, data: {...result}};
+		},
+
 		/**
 		 *  Valid HSV values:
 		 *  - h = 0 <=> 360
@@ -332,7 +384,7 @@ export const convert = {
 		 * @returns {RGBColor | undefined} {r, g, b}, or undefined if failed. See {@link RGBColor}  
 		 * @see {@link convert.hsv.rgb} 
 		 * */
-		rgb: (val) => parseAndConvert(val, hsvSchema, rgbSchema, [HSVtoRGB], castToHSV), 
+		toRGB: (val) => parseAndConvert(val, hsvSchema, rgbSchema, [HSVtoRGB], castToHSV), 
 		
 		/**
 		 *  Valid HSV values:
@@ -345,7 +397,7 @@ export const convert = {
 		 * @returns {HSLColor | undefined} {h, s, l}, or undefined if failed. See {@link HSLColor}  
 		 * @see {@link convert.hsv.hsl} 
 		 * */
-		hsl: (val) => parseAndConvert(val, hsvSchema, hslSchema, [HSVtoHSL], castToHSV),
+		toHSL: (val) => parseAndConvert(val, hsvSchema, hslSchema, [HSVtoHSL], castToHSV),
 		
 		/**
 		 *  Valid HSV values:
@@ -357,7 +409,7 @@ export const convert = {
 		 * @param {HSVColor | HSVTupleColor | HSVString} val HSV Parsable. See {@link HSVColor}, {@link HSVTupleColor}, {@link hueNumber}, {@link percentNumber}		 * @returns {HEXColor | undefined} A HEX String, or undefined if failed. See {@link HEXColor}  
 		 * @see {@link convert.hsv.hex} 
 		 * */
-		hex: (val) => parseAndConvert(val, hsvSchema, hexSchema, [HSVtoRGB, RGBtoHEX], castToHSV),
+		toHEX: (val) => parseAndConvert(val, hsvSchema, hexSchema, [HSVtoRGB, RGBtoHEX], castToHSV),
 		
 		/**
 		 *  Valid HSV values:
@@ -372,7 +424,29 @@ export const convert = {
 		toColor: (val) => parseAndConvert(val, hsvSchema, colorSchema, [valueToColorObject], castToHSV),
 	},
 
-	hex: {
+	HEX: {
+				/**
+		 *  Valid HEX values:
+		 *  - string: "000" <=> "fff"
+		 *  - string: "000000" <=> "ffffff"
+		 * 
+		 * 
+		 *   letters are not case sensitive
+		 * @param {HEXColor} val HEX Parsable. See {@link HEXColor}
+		 * @returns {z.SafeParseReturnType<string, string>} Zod Safeparse return parameters
+		 * @see {@link convert.hex.isValid} 
+		 * */
+		isValid: (val) => hexSchema.safeParse(val),
+		/**
+		 * Casts val to Hexadecimal string before parsing against the HEX schema
+		 * - if not possible, returns undefined
+		 * @param {unknown} unknownValue An unknown value, presumed to be a string
+		 * @returns {{isValid: boolean, data: HEXColor} | undefined} The {@link HEXColor} or undefined if failed
+		 */
+		preprocess: (unknownValue) => {
+			let result = preprocessHex(unknownValue);
+			if(result) return {isValid: true, data: result};
+		},
 		/**
 		 *  Valid HEX values:
 		 *  - string: "000" <=> "fff"
@@ -384,7 +458,7 @@ export const convert = {
 		 * @returns {RGBColor | undefined} {r, g, b}, or undefined if failed. See {@link RGBColor}  
 		 * @see {@link convert.hex.rgb} 
 		 * */
-		rgb: (val) => parseAndConvert(val, hexSchema, rgbSchema, [HEXtoRGB], castToHEX),
+		toRGB: (val) => parseAndConvert(val, hexSchema, rgbSchema, [HEXtoRGB], castToHEX),
 		
 		/**
 		 *  Valid HEX values:
@@ -397,7 +471,7 @@ export const convert = {
 		 * @returns {HSLColor | undefined} {h, s, l}, or undefined if failed. See {@link HSLColor}  
 		 * @see {@link convert.hex.hsl} 
 		 * */
-		hsl: (val) => parseAndConvert(val, hexSchema, hslSchema, [HEXtoRGB, RGBtoHSV, HSVtoHSL], castToHEX),
+		toHSL: (val) => parseAndConvert(val, hexSchema, hslSchema, [HEXtoRGB, RGBtoHSV, HSVtoHSL], castToHEX),
 		
 		/**
 		 *  Valid HEX values:
@@ -410,7 +484,7 @@ export const convert = {
 		 * @returns {HSVColor | undefined} {h, s, v}, or undefined if failed. See {@link HSVColor}  
 		 * @see {@link convert.hex.hsv} 
 		 * */
-		hsv: (val) => parseAndConvert(val, hexSchema, hsvSchema, [HEXtoRGB, RGBtoHSV], castToHEX),
+		toHSV: (val) => parseAndConvert(val, hexSchema, hsvSchema, [HEXtoRGB, RGBtoHSV], castToHEX),
 		
 		/**
 		 *  Valid HEX values:
@@ -540,14 +614,14 @@ function extractTriValue(val, [aTags, aMax, aMin], [bTags, bMax, bMin], [cTags, 
 		a = extractPropertyFromObject(val, aTags, (v) => isNumberBetween(v, aMax, aMin));
 		b = extractPropertyFromObject(val, bTags, (v) => isNumberBetween(v, bMax, bMin));
 		c = extractPropertyFromObject(val, cTags, (v) => isNumberBetween(v, cMax, cMin));
-		if (a && b && c) return [a, b, c];
+		if (a !== undefined && b !== undefined && c !== undefined) return [a, b, c];
 	}
 }
 
 /**
  * Casts val to {H, S, L} Object before parsing against HSL Schema
  * - h must be 0 <= h <= 360
- * - s and l must be 0 <= n <= 160
+ * - s and l must be 0 <= n <= 100
  * - returns undefined if requirements not met
  * @param {unknown} unknownValue string, object, or array with h, s, l values
  * @returns {HSLColor | undefined} The {@link HSLColor} or undefined if failed
@@ -579,7 +653,6 @@ function preprocessHSV(unknownValue) {
 		[['s', 'saturation'], 100, 0],
 		[['v', 'value'], 100, 0]
 	);
-
 	if (values && values.length >= 3) {
 		const [h, s, v] = values;
 		return { h, s, v };
@@ -616,7 +689,8 @@ export function preprocessHex(val) {
 	let str = val.toString() || '';
 	str = str.match(/[\dA-Fa-f]/g)?.join('') || '';
 	if (str.length > 6) str = str.substring(0, 5);
-	if (str.length === 3) str = `${str}${str}`;
+	//Todo: remove below line and upload to Github. It interferes with text editing
+	// if (str.length === 3) str = `${str}${str}`;
 	if (str.length === 6) return str;
 }
 

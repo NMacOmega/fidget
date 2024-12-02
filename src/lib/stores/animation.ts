@@ -1,7 +1,7 @@
 import { derived, get } from "svelte/store";
 import { readableWithInit } from "./custom";
 import { LoopOnce } from "three";
-import { currentFidgetName } from "$lib/stores/material";
+import { currentFidgetName } from "$stores/activeMaterial";
 import type { AnimationAction } from "three";
 import type { AnimationsCollection } from "$types";
 

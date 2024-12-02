@@ -1,30 +1,21 @@
 <script lang="ts">
-	import { glossiness, hsl, selectedUUID } from '$stores/activeMaterial';
-
-	type EventWithVal = Event & {
-		currentTarget: EventTarget & HTMLInputElement;
-	};
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
 
 	export let max = 100,
 		min = 0,
-		step = 0.1;
-
-	//Binding to intermediate one-way value to prevent infinite loop
-	let value = $glossiness || 0;
-	/**Minimum height of the marker in percent*/
-	const minDisplay = 20;
+		step = 0.1,
+		value = 0;
 
 	//CSS Variabls
 	/**How tall to make the leading edge of the slider*/
 	let height = 100;
+	/**The color hue for the slider to match the color of the option*/
+	export let hue = 0;
+	// The minimum height to show the slider so it does not disapear
+	const minDisplay = 20;
 
-	const onMaterialChange = (_trigger: typeof $selectedUUID) => (value = $glossiness);
-	const onInput = (e: EventWithVal) => {
-		const val = Number(e.currentTarget.value);
-		glossiness.set(val <= 0 ? 0.0001 : val);
-	};
-
-	$: onMaterialChange($selectedUUID);
+	const onInput = (str: string) => dispatch('roughnessChange', { value: Number(str) });
 	$: height = value < minDisplay ? minDisplay : value;
 </script>
 
@@ -32,12 +23,12 @@
 	class="roughness"
 	style:--left={`${value}%`}
 	style:--height={`${height}%`}
-	style:--color={`hsl(${$hsl.h}, 100%, 60%)`}
+	style:--color={`hsl(${hue}, 100%, 60%)`}
 	style:--hsl-color={`linear-gradient(90deg, 
-						hsl(${$hsl.h}, 1%, 90%) 0%,  
-						hsl(${$hsl.h}, 40%, 50%) ${value}%,  
-						hsl(${$hsl.h}, 100%, 50%) 100%,  
-						hsl(${$hsl.h}, 100%, 50%) 100%)`}
+						hsl(${hue}, 1%, 90%) 0%,  
+						hsl(${hue}, 40%, 50%) ${value}%,  
+						hsl(${hue}, 100%, 50%) 100%,  
+						hsl(${hue}, 100%, 50%) 100%)`}
 >
 	<span class="roughnessSpan" id="roughnessSpan" />
 	<input
@@ -50,7 +41,7 @@
 		{step}
 		aria-label="roughness slider"
 		bind:value
-		on:input={onInput}
+		on:input={(e) => onInput(e.currentTarget.value)}
 	/>
 	<div id="roughnessMarker" class="roughnessMarker" />
 </div>
@@ -58,7 +49,7 @@
 <style>
 	.roughness {
 		direction: ltr;
-		margin: 20px auto;
+		margin: auto;
 		border-radius: 5px;
 		position: relative;
 		width: calc(100% - 30px);

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ColorSwatchPreview from './ColorSwatchPreview.svelte';
-	import { hsl, opacity, metalness, glossiness } from '$stores/material';
+	import { hsl, opacity, metalness, glossiness } from '$stores/activeMaterial';
 	import Icon from '$lib/Icon/Icon.svelte';
 	import type { ColorSwatch, ColorSwatchWithKey } from '$types';
 
