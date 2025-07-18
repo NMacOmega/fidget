@@ -1,6 +1,6 @@
 <script>
-	import { metalness, opacity, glossiness, defaultMaterial } from '$stores/activeMaterial';
-	import { hex } from '$stores/colorStores';
+	import { metalness, opacity, glossiness, defaultMaterial } from '$stores/activeMaterialOLD';
+	// import { hex } from '$stores/colorStores';
 	import { materialOptionsList } from '$stores/materialList';
 	import { createEventDispatcher } from 'svelte';
 	import ColorIcon from '../ColorIcon/ColorIcon.svelte';

@@ -1,55 +1,73 @@
 <script lang="ts">
 	import FidgetIcon from '../MenuComponents/FidgetIcon/FidgetIcon.svelte';
-	import { fidgetsList } from '$stores/materialOld';
+	import { fidgetReference, sceneHighlights, highlightFidget } from '$stores/threeJSObjectStores';
+	import { camera } from '$stores/camera';
+	import type { FidgetName } from '$stores/threeJSObjectStores';
 	import Icon from '../MenuComponents/Icon/Icon.svelte';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+	let centerSlide: HTMLElement;
 
-	//@todo next: create Fidget menu
-	//indexes to show specific fidget in each place, mandatory at least three elements
-	let previ = 0;
-	let curri = 1;
-	let nexti = 2;
+	let captureScroll = false;
 
-	function onFidgetClick(f: number) {
-		console.log(f);
-	}
-
-	function advanceGallery(forward: boolean) {
-		if (forward) {
-			previ = previ >= $fidgetsList.length - 1 ? 0 : previ + 1;
-			curri = curri >= $fidgetsList.length - 1 ? 0 : curri + 1;
-			nexti = nexti >= $fidgetsList.length - 1 ? 0 : nexti + 1;
-		} else {
-			previ = previ <= 0 ? $fidgetsList.length - 1 : previ - 1;
-			curri = curri <= 0 ? $fidgetsList.length - 1 : curri - 1;
-			nexti = nexti <= 0 ? $fidgetsList.length - 1 : nexti - 1;
+	function onWindowScroll(
+		e: UIEvent & {
+			currentTarget: EventTarget & Window;
 		}
+	) {
+		if (captureScroll) e.stopPropagation();
 	}
-
-	//@todo : can We animate the transition and add a carousel motion?
+	// @todo: Set button behavior and hid scroll progressbar
+	//@todo: also improve scrollwheel behavior over element
+	//May need to use onWheelEvent to stop wierd scrolling over eleemnt
+	function onScrollFromCenter(entries: IntersectionObserverEntry[]) {
+		entries.forEach((entry) => {
+			if (entry.target.className.includes('second') && !entry.isIntersecting)
+				centerSlide?.scrollIntoView({ behavior: 'instant', inline: 'center' });
+		});
+	}
+	function onReady() {
+		const centerScrollObserver = new IntersectionObserver(onScrollFromCenter, {
+			root: document.querySelector('.fidgetGallery'),
+			rootMargin: '0px',
+			threshold: 0.01
+		}).observe(centerSlide);
+	}
+	setTimeout(onReady, 150);
 </script>
+
+<svelte:window on:scroll|preventDefault|stopPropagation={(e) => onWindowScroll(e)} />
 
 <div class="fidgetMenu">
 	<div class="fidgetChoiceMenu">
-		<div class="fidgetGallery">
-			<div class="prevFidget" on:click={() => onFidgetClick(previ)}>
-				<FidgetIcon icon={$fidgetsList[previ]} />
+		<div
+			class="fidgetGallery"
+			on:mouseenter={() => (captureScroll = true)}
+			on:mouseleave={() => (captureScroll = false)}
+		>
+			<div class="fidgetGallerySlide first">
+				{#each fidgetReference.names as fidget}
+					<div class="fidgetOption">
+						<FidgetIcon icon={fidget} />
+					</div>
+				{/each}
 			</div>
-			<div class="currFidget" on:click={() => onFidgetClick(curri)}>
-				<FidgetIcon icon={$fidgetsList[curri]} />
+			<div class="fidgetGallerySlide second" bind:this={centerSlide}>
+				{#each fidgetReference.names as fidget}
+					<div class="fidgetOption">
+						<FidgetIcon icon={fidget} />
+					</div>
+				{/each}
 			</div>
-			<div class="nextFidget" on:click={() => onFidgetClick(nexti)}>
-				<FidgetIcon icon={$fidgetsList[nexti]} />
+			<div class="fidgetGallerySlide third">
+				{#each fidgetReference.names as fidget}
+					<div class="fidgetOption">
+						<FidgetIcon icon={fidget} />
+					</div>
+				{/each}
 			</div>
 		</div>
 
-		<button class="prev" on:click={() => advanceGallery(false)}
-			><Icon class="fa-solid fa-angle-left" /></button
-		>
-		<button class="next" on:click={() => advanceGallery(true)}
-			><Icon class="fa-solid fa-angle-right" /></button
-		>
 		<button class="close" on:click={() => dispatch('close')}>Close</button>
 	</div>
 </div>
@@ -83,37 +101,25 @@
 
 	.fidgetGallery {
 		grid-area: gallery;
-		display: grid;
-		grid-template-columns: repeat(1fr, 3);
-		grid-template-areas: 'prev curr next';
+		display: flex;
+		flex-direction: row;
+		overflow-x: scroll;
 	}
 
-	.prevFidget {
-		grid-area: prev;
+	.fidgetGallerySlide {
+		display: flex;
+		flex-direction: row;
+		min-width: 100%;
+		height: 100%;
+		align-items: center;
+		justify-content: space-around;
 	}
 
-	.currFidget {
-		grid-area: curr;
-	}
-
-	.nextFidget {
-		grid-area: next;
-	}
-
-	.prevFidget,
-	.nextFidget {
-		width: 75%;
-		height: 75%;
-		align-self: center;
-		justify-self: center;
-	}
-
-	.prev {
-		grid-area: prev;
-	}
-
-	.next {
-		grid-area: next;
+	.fidgetOption {
+		--size: 6rem;
+		width: var(--size);
+		height: var(--size);
+		flex-shrink: 0;
 	}
 
 	.close {

@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import {get} from 'svelte/store';
-import { highlightFidget } from "$stores/activeMaterial";
+
+import { fidgetReference, type FidgetCamera, type FidgetFocusPoint } from "$stores/threeJSObjectStores";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import type { Camera, Object3D } from "three";
 
@@ -8,12 +9,13 @@ import type { Camera, Object3D } from "three";
 /** {@link orbit} - See {@link https://threejs.org/docs/#examples/en/controls/OrbitControls threejs OrbitControls}*/
 export const orbit = writable<OrbitControls>();
 
-/** Each position in the scene is tied to a camera position. This index tracks which position is in use*/
-const cameraIndex = writable(0);
+
 /** A collection of Camera Position objects where the camera can be moved to  */
 const cameraPositions = writable<Object3D[]>([]);
 /** A collection of Position objects where the camera will point to when moved  */
 const focalPositions = writable<Object3D[]>([]);
+
+
 
 export const camera = function(){
   /**The Camera used in this threeJS scene */
@@ -29,60 +31,23 @@ export const camera = function(){
   };
 
 
-/**
- * Accesses camera position locations at {@link newInd} and updates camera and orbit controls with new values.
- * 
- * @shortcircuits-if
- * - {@link newInd} === current index
- * - a camera reference or focal reference at newInd does not exist
- * @param newInd 
- * @void Updates {@link cameraStore camera} and {@link orbit} controls if valid values are available
- */
-  const moveCamera = (newInd:number)=>{
-    if(newInd === get(cameraIndex)) return;
-    const newCamPosition = get(cameraPositions)[newInd]?.position;
-    console.log(get(cameraPositions));
-    const newFocal = get(focalPositions)[newInd];
-    const {name: newFocalName, position:newFocPosition} = newFocal; 
 
-    if(!newCamPosition || !newFocPosition) return;
+
+  const move = (camera: FidgetCamera, focus: FidgetFocusPoint)=>{
+    const cameraPos = get(cameraPositions).filter((c)=>c.userData.name===camera)[0];
+    const focalPos = get(focalPositions).filter((c)=>c.userData.name===focus)[0];
+    if(!cameraPos.isObject3D || !focalPos.isObject3D) return;
     const cam = get(cameraStore);
-    cam?.position?.copy(newCamPosition);
     const orb = get(orbit);
-    orb?.target?.copy(newFocPosition);
+    cam.position.copy(cameraPos.position);
+    orb.target.copy(focalPos.position);
     //Forces new camera position to maintain current zoom,must be done before orbit update
-    zoom.setFromValue(get(zoom)); 
+    zoom.setFromValue(get(zoom))
     orb.update();
-    highlightFidget(newFocalName);
-    cameraIndex.set(newInd);
   }
 
-  /**
-   * Calculates the new camera index from diff.
-   * @param diff How far to move the index. 
-   * 
-   * - Positive numbers move index forward
-   * - Negative numbers move index backward 
-   * - 0 returns current index
-   * @returns the new calculated index
-   */
-  const traverseCameraIndex=(diff:number) =>{
-     if(diff === 0) return get(cameraIndex);
-     const max = get(cameraPositions).length-1 || 0;
-     //No point traversing if less than two items exist
-     if(max < 1) return get(cameraIndex);
-     let newInd = get(cameraIndex) + diff;
-     if(newInd < 0) newInd = max;
-     if(newInd > max) newInd = 0;
-     return newInd;
-  }
-  /** Advances to the next camera position or to index 0 if advanced beyond max */
-  const next = ()=> moveCamera(traverseCameraIndex(1));
-  /** Regresses to the prev camera position or to index {@link max} if regressed beyond 0 */
-  const prev = ()=> moveCamera(traverseCameraIndex(-1));
-  // const next = ()=> traverseCamera('next');
-  // const prev = ()=> traverseCamera('prev');
-  return {subscribe: cameraStore.subscribe, init, next, prev};
+
+  return {subscribe: cameraStore.subscribe, init, cameraPositions, move};
 
 }();
 
@@ -127,22 +92,26 @@ const disable = ()=> setZoomEnabled(false);
 function setFromValue(val: number){
     if(val<=0) return;
     const cam = get(camera);
-    const focal = get(focalPositions)[get(cameraIndex)]?.position;
-    if(!cam || !focal) return;
+    const focal = get(fidgetReference.current).focusPoint;
+    const focalPos = get(focalPositions).filter((c)=>c.userData.name===focal)[0];
+    if(!cam || !focalPos.isObject3D) return;
     set(val);
     /**threeJS accepts values 0<=>1. See {@link https://threejs.org/docs/#api/en/math/Vector3.lerpVectors Vector3 lerpVectores}*/ 
     val /=100; 
-    const currentDistance = cam.position.distanceTo(focal);
+    const currentDistance = cam.position.distanceTo(focalPos.position);
     const desiredMovement = limit.max - limit.min * val;
     const travelDistance = desiredMovement / currentDistance;
-    cam.position.lerpVectors(focal, cam.position, travelDistance);
+    cam.position.lerpVectors(focalPos.position, cam.position, travelDistance);
 }
 /**
  * Retrieves distance from orbit controls and converts into value to store in zoom store
  * @void updates the store with the calculated value
  */
 function setFromOrbit(){
-    let val = get(camera).position.distanceTo(get(focalPositions)[get(cameraIndex)]?.position);
+  const focal = get(fidgetReference.current)?.focusPoint;
+  const focalPos = get(focalPositions).filter((c)=>c.userData.name===focal)[0];
+  if(!focalPos?.isObject3D) return;
+    let val = get(camera).position.distanceTo(focalPos?.position);
     val = ((val - limit.min) / limit.min) * 100;
     const result = 100 - val;
     if(result > 0) set(result);

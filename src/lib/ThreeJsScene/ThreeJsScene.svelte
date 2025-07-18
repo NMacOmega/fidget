@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { initializeThreeJSSceneFromModelURL, onWindowResize } from './ThreeJsInit';
 	import { onMouseDown, onMouseUp, onMouseDrag } from './ThreeJsEvents';
-	import { selectedUUID } from '$stores/activeMaterial';
+	import { selectedUUID } from '$stores/threeJSObjectStores';
 
 	/**URL to model, stored in environment and provided by page.svelte*/
 	export let modelURL: string;

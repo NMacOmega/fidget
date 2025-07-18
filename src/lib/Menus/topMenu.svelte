@@ -7,7 +7,8 @@
 	import ColorMenu from './ColorMenu/ColorMenu.svelte';
 	import ColorEditMenu from './ColorEditMenu/ColorEditMenu.svelte';
 	import { zoom } from '$stores/camera';
-	import { currentFidgetName } from '$stores/activeMaterial';
+	import { get } from 'svelte/store';
+	import { fidgetReference } from '$stores/threeJSObjectStores';
 	import {
 		currentMaterialColor,
 		currentMaterialMetalness,
@@ -20,7 +21,7 @@
 	let choosingColor = false;
 	let editingColor = false;
 	let editMenuActiveTab = 'color';
-
+	//@todo The color still does not update when changing materials
 	const onZoomBarChange = (e) => zoom.setFromValue(Number(e.currentTarget.value));
 </script>
 
@@ -64,7 +65,10 @@
 				/>
 			</div>
 			<div class="fidgetIcon">
-				<FidgetIcon icon={$currentFidgetName} on:click={() => (choosingFidget = true)} />
+				<FidgetIcon
+					icon={get(fidgetReference.current).name}
+					on:click={() => (choosingFidget = true)}
+				/>
 			</div>
 			<div class="zoom">
 				<div

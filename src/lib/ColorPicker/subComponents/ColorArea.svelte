@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { hsv, hex, selectedUUID } from '$stores/activeMaterial';
+	import { selectedUUID } from '$stores/threeJSObjectStores';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	let thisElement: HTMLElement,

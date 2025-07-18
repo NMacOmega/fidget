@@ -3,8 +3,9 @@ import {get} from 'svelte/store';
 import { getPickPosition, pickObjectFromPosition } from "$lib/ThreeJsScene/ThreeJsPicker";
 import {handleRotation}  from "$lib/ThreeJsScene/ThreeJsRotate";
 
-import { selectedUUID, isMouseDown, pickPosition, interactions } from '$stores/activeMaterial';
+import { selectedUUID, isMouseDown, pickPosition, interactions } from '$stores/threeJSObjectStores';
 import { orbit } from '$stores/camera';
+import { updateCurrentMaterial } from '$stores/materialList';
 
 
 /**
@@ -39,6 +40,7 @@ export function onMouseDown (event: MouseEvent) {
     
     if (pickedUUID !== currentUUID) {
       selectedUUID.set(pickedUUID);
+      updateCurrentMaterial(pickedUUID);
 
       const sceneInteractionsList = Object.keys(get(interactions));
       const orbitController = get(orbit);

@@ -1,5 +1,4 @@
 <script>
-	import { hex } from '$stores/colorStores';
 	import ColorIcon from '../ColorIcon/ColorIcon.svelte';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -18,16 +17,16 @@
 
 <div class="colorOptions">
 	<div class="colorOption first">
-		<ColorIcon hexColor={$hex} />
+		<ColorIcon hexColor={'ff00ff'} />
 	</div>
 	<div class="colorOption second">
-		<ColorIcon hexColor={$hex} />
+		<ColorIcon hexColor={'ff00ff'} />
 	</div>
 	<div class="colorOption third">
-		<ColorIcon hexColor={$hex} />
+		<ColorIcon hexColor={'ff00ff'} />
 	</div>
 	<div class="colorOption fourth">
-		<ColorIcon hexColor={$hex} />
+		<ColorIcon hexColor={'ff00ff'} />
 	</div>
 </div>
 

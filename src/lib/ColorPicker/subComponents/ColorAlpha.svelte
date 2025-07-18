@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { hsl, opacity, selectedUUID } from '$stores/activeMaterial';
+	import { selectedUUID } from '$stores/threeJSObjectStores';
 
 	export let min = 0.0,
 		max = 100,

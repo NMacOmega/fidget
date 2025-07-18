@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { selectedUUID, hsl, metalness, opacity, glossiness } from '$stores/activeMaterial';
+	// import { selectedUUID, hsl, metalness, opacity, glossiness } from '$stores/activeMaterialOLD';
 	import Icon from '$lib/Icon/Icon.svelte';
 
 	type Colors = {

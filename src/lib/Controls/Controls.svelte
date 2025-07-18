@@ -5,8 +5,7 @@
 	import FidgetChoiceMenu from './FidgetChoiceMenu.svelte';
 	import ColorChoiceMenu from './ColorChoiceMenu/ColorChoiceMenu.svelte';
 	import { zoom } from '$stores/camera';
-	import { currentFidgetName } from '$stores/activeMaterial';
-	import { hex } from '$stores/colorStores';
+	// import { currentFidgetName } from '$stores/activeMaterialOLD';
 
 	let zoombarOpen = false;
 	let choosingFidget = false;
@@ -31,7 +30,7 @@
 		<ColorChoiceMenu on:close={() => (choosingColor = false)} />
 	{:else}
 		<div class="colorIcon" on:click={() => (choosingColor = true)}>
-			<ColorIcon hexColor={$hex} />
+			<ColorIcon hexColor={'blue'} />
 		</div>
 		<div class="fidgetIcon">
 			<FidgetIcon icon={$currentFidgetName} on:click={() => (choosingFidget = true)} />

@@ -1,9 +1,16 @@
 <script lang="ts">
 	import ColorIcon from '../MenuComponents/ColorIcon/ColorIcon.svelte';
 	import { colorConvert } from '$lib/colorFunctions';
-	import { currentMaterialOptions } from '$stores/materialList';
+	import {
+		currentMaterialColor,
+		currentMaterialMetalness,
+		currentMaterialOpacity,
+		currentMaterialOptions,
+		currentMaterialRoughness
+	} from '$stores/materialList';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+	import { currentMaterial } from '$stores/materialList';
 
 	let activeIndex = $currentMaterialOptions.activeOption;
 
@@ -47,10 +54,10 @@
 	</div>
 	<div class="currentColor">
 		<ColorIcon
-			hexColor={activeOption.color}
-			metalness={activeOption.metalness}
-			roughness={activeOption.roughness}
-			opacity={activeOption.opacity}
+			hexColor={$currentMaterialColor}
+			metalness={$currentMaterialMetalness}
+			roughness={$currentMaterialRoughness}
+			opacity={$currentMaterialOpacity}
 			hslColor={activeOption.hsl}
 		/>
 	</div>

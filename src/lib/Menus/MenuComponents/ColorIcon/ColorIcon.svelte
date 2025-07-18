@@ -72,7 +72,7 @@
 	}
 
 	@property --opoint {
-		syntax: '<percent>';
+		syntax: '<percentage>';
 		inherits: false;
 		initial-value: 0%;
 	}
@@ -160,7 +160,6 @@
 			),
 			linear-gradient(0deg, var(--backgroundColor) 0%, var(--backgroundColor) 100%);
 		border: 1px solid var(--innerOutlineColor);
-		/* @todo: is it possible to transition on a percentage property like --opoint? */
 		transition: --opoint 0.5s;
 	}
 </style>

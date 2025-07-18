@@ -1,7 +1,6 @@
 import { writable, get, derived } from "svelte/store";
 import { Color, colorConvert } from "$lib/colorFunctions";
-import { selectedUUID } from "./activeMaterial";
-import { getObjectWithMaterial } from "./activeMaterial";
+import { selectedUUID, getObjectWithMaterial } from "./threeJSObjectStores";
 
 type MaterialOption = {
 	color: Color,
@@ -24,11 +23,20 @@ export const currentMaterial = {
 	color: currentMaterialOption.color
 };
 
+
 export const currentMaterialMetalness = {subscribe: currentMaterialOption.metalness};
 export const currentMaterialRoughness = {subscribe: currentMaterialOption.roughness};
 export const currentMaterialOpacity = {subscribe: currentMaterialOption.opacity};
 export const currentMaterialColor = {subscribe: currentMaterialOption.color};
 
+export const updateCurrentMaterial = (UUID:string)=>{
+	const currentOptions = (get(materialsOptionsStore)[UUID]);
+	const currentOption = currentOptions.options[currentOptions.activeOption]; 
+	currentMaterialOption.setColor(currentOption.color);
+	currentMaterialOption.setMetalness(currentOption.metalness);
+	currentMaterialOption.setRoughness(currentOption.roughness);
+	currentMaterialOption.setOpacity(currentOption.opacity);
+}
 //To be run only once just after first Highlight operation in threeJS, so presentation variables are accurate
 export function initializeCurrentMaterialOptions(){
 	const initialOptions = get(currentMaterialOptions);

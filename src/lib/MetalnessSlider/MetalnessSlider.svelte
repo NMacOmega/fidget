@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { metalness, selectedUUID } from '$stores/activeMaterial';
+	import { selectedUUID } from '$stores/threeJSObjectStores';
 
 	type EventWithVal = Event & {
 		currentTarget: EventTarget & HTMLInputElement;

@@ -4,12 +4,12 @@
 	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 	import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 	import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment';
-    import { sceneObjects, sceneDefaultMaterials, canvas, scene as sceneStore, sceneHighlights, highlightFidget, interactions, roughness, opacity} from '$stores/activeMaterial';
+    import { sceneObjects, sceneDefaultMaterials, canvas, scene as sceneStore, sceneHighlights, highlightFidget, interactions} from '$stores/threeJSObjectStores';
     import { camera as cameraStore, orbit as orbitStore, zoom as zoomStore } from '$stores/camera';
     import { animations } from '$stores/animation';
     import { materialsOptionsStore, initializeCurrentMaterialOptions } from '$stores/materialList';
     import type { SceneObjects, SceneHighlights, SceneDefaultMaterials} from '$types';
-import { fidgetsList } from '$stores/materialOld';
+    import {fidgetReference, defaultMaterialOptions } from '$stores/threeJSObjectStores';
     
     //These global variables store theeJS elements needed across intialization, render, and animate
     let threeScene: THREE.Scene;
@@ -90,14 +90,8 @@ import { fidgetsList } from '$stores/materialOld';
         
         //Extract objects, animations, and reference points for focus and cameras from the children of this model scene
         const animationActions:THREE.AnimationAction[] = gltf.animations.reduce((acc, clip)=>{return [...acc, mixer.clipAction(clip)]}, [] as THREE.AnimationAction[]);
-        
-        const highlightsMap = {
-            'cubeBase': 'focus1',
-            'sphereBase' : 'focus2',
-            'baseInner': 'focus3'
-        };
-        const fidgets = ['cube', 'discs', 'sphere'];
         const interactionsMap = get(interactions)
+
         const cameras: THREE.Object3D[] = [];
         const focals: THREE.Object3D[] = [];
         const highlights: SceneHighlights = {};
@@ -109,15 +103,13 @@ import { fidgetsList } from '$stores/materialOld';
             const { name } = obj;      
             if (name.includes('camera')) return cameras.push(obj);
             if (name.includes('focus')) return focals.push(obj);
+            
+            
             const isVisibleInScene = obj?.userData?.group;
             if (obj.name.includes('hidden') || !isVisibleInScene) return (obj.visible = false);
 
-            const nameToHighlight = highlightsMap[name as keyof typeof highlightsMap];
-            if(nameToHighlight && obj.isMesh)
-                highlights[nameToHighlight] = obj as THREE.Mesh;
-
-            
-
+            const nameToHighlight = fidgetReference.lookup.byObjectName(name)?.name;
+            if(nameToHighlight && obj.isMesh) highlights[nameToHighlight] = obj as THREE.Mesh; 
             
             const action = obj.userData.type;
             if (action === 'rotate' && interactionsMap[name]) {
@@ -133,6 +125,7 @@ import { fidgetsList } from '$stores/materialOld';
                     opacity: obj.material.opacity,
                     color: obj.material.color.getHexString()};
             }
+
             initialMaterials[obj.uuid] = {
                 activeOption: 0, //option 0 is default
                 options: [
@@ -142,24 +135,7 @@ import { fidgetsList } from '$stores/materialOld';
                         opacity: obj.material.opacity*100,
                         color: obj.material.color.getHexString()
                     },
-                    {
-                        metalness: 50,
-                        roughness: 50,
-                        opacity: 100,
-                        color: 'ff0000',
-                    },
-                    {
-                        metalness: 90,
-                        roughness: 20,
-                        opacity: 50,
-                        color: '00ff00',
-                    },
-                    {
-                        metalness: 20,
-                        roughness: 90,
-                        opacity: 20,
-                        color: '0000ff',
-                    }
+               ...defaultMaterialOptions
                 ]
             }
         });
@@ -173,7 +149,6 @@ import { fidgetsList } from '$stores/materialOld';
         sceneDefaultMaterials.init(defaultMaterials);
         materialsOptionsStore.set(initialMaterials);
         sceneHighlights.init(highlights);
-        fidgetsList.init([...fidgets]);
         animations.initFromActions(animationActions);
 
         //Store to local globals so we don't need to use get()
@@ -188,7 +163,7 @@ import { fidgetsList } from '$stores/materialOld';
 
         //Tell THREEJS to refresh and focus on the initial focus point
         orbit.update();
-        highlightFidget('focus1');  
+        highlightFidget(get(fidgetReference.current).name);  
         initializeCurrentMaterialOptions();
         onWindowResize(canvasElem);
         animate();
